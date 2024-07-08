@@ -12,8 +12,8 @@ app.use(express.json());
 app.use(router);
 
 app.get("/", (req, res) => {
-  res.json({
-    message: "Todo App",
+  res.status(200).send({
+    message: "App is running",
   });
 });
 
