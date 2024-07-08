@@ -1,68 +1,108 @@
-import { ITask } from "../interfaces/Task";
+import * as path from "path";
+
+import { ITask, ITodo } from "../interfaces/Task";
 import { TASK_STATUS } from "../enums/TaskStatus";
+import { readJsonFile, writeJsonFile } from "../utils/utils";
 
-const tasks = [
-  {
-    id: "1",
-    title: "Write Chapter on 'Master-Slave Morality'",
-    desc: "Develop ideas for the contrasting moralities of master and slave classes.",
-    status: TASK_STATUS.PENDING
-  },
-  {
-    id: "2",
-    title: "Revise 'Thus Spoke Zarathustra'",
-    desc: "Review and edit draft of the philosophical novel.",
-    status: TASK_STATUS.PENDING
-  },
-  {
-    id: "3",
-    title: "Prepare Lecture on Eternal Recurrence",
-    desc: "Create lecture notes and outline for upcoming lecture on eternal recurrence.",
-    status: TASK_STATUS.DONE
-  },
-  {
-    id: "4",
-    title: "Correspondence with Wagner",
-    desc: "Exchange letters with Richard Wagner regarding philosophy and music.",
-    status: TASK_STATUS.NOTSTARTED
-  },
-  {
-    id: "5",
-    title: "Read Schopenhauer's 'The World as Will and Representation'",
-    desc: "Study Schopenhauer's work to inform own philosophical reflections.",
-    status: TASK_STATUS.NOTSTARTED
-  }
-];
+const filePath = path.resolve(__dirname, "../tasks.json");
+let tasks: ITodo[] = [];
 
-export function getTasks() {
+readJsonFile(filePath)
+  .then((jsonData) => {
+    tasks = jsonData;
+  })
+  .catch((err) => {
+    console.error("Error reading JSON file:", err);
+  });
+
+/**
+ * Get all tasks
+ */
+export function getTasks(): ITodo[] {
   return tasks;
 }
 
-export function getTaskById(id: string) {
-  return tasks.find(({ id: userId }) => userId === id);
+/**
+ * Get task by id
+ *
+ * @param id Task id
+ * @returns Task object if found or null
+ */
+export function getTaskById(id: string): ITodo | null {
+  const task = tasks.find(({ id: userId }) => userId === id);
+  return !task ? null : task;
 }
 
-export function createTask(task: ITask) {
-  tasks.push({
+/**
+ * Create a new task
+ *
+ * @param task Task object
+ * @returns Task object
+ */
+export function createTask(task: ITask): ITodo {
+  const newTask: ITodo = {
     id: `${tasks.length + 1}`,
     ...task,
-  });
+  };
+  tasks.push(newTask);
+
+  writeJsonFile(filePath, tasks)
+    .then(() => {
+      console.log("JSON file has been written successfully!");
+    })
+    .catch((err) => {
+      console.error("Error writing JSON file:", err);
+    });
+
+  return newTask;
 }
 
-export function updateTask(id: string, task: ITask): number {
-  const index = tasks.findIndex((item) => item.id === id);
-
-  if (index !== -1) {
-    tasks[index] = { ...tasks[index], ...task };
-  }
-  return index;
-}
-
-export function deleteTask(id: string): number {
+/**
+ * Update task
+ *
+ * @param id Task id
+ * @param task Task object
+ * @returns Task object if found or null
+ */
+export function updateTask(id: string, task: ITask): ITodo | null {
   const index = tasks.findIndex((task) => task.id === id);
 
-  if (index !== -1) {
-    tasks.splice(index, 1);
-  }
-  return index;
+  if (index === -1) return null;
+
+  tasks[index] = { ...tasks[index], ...task };
+
+  writeJsonFile(filePath, tasks)
+    .then(() => {
+      console.log("JSON file has been written successfully!");
+    })
+    .catch((err) => {
+      console.error("Error writing JSON file:", err);
+    });
+
+  return tasks[index];
+}
+
+/**
+ * Delete task
+ *
+ * @param id Task id
+ * @returns Task object if found or null
+ */
+export function deleteTask(id: string): ITodo | null {
+  const index = tasks.findIndex((task) => task.id === id);
+
+  if (index === -1) return null;
+  const data = tasks[index];
+
+  tasks.splice(index, 1);
+
+  writeJsonFile(filePath, tasks)
+    .then(() => {
+      console.log("JSON file has been written successfully!");
+    })
+    .catch((err) => {
+      console.error("Error writing JSON file:", err);
+    });
+
+  return data;
 }
