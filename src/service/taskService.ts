@@ -1,41 +1,104 @@
-import { ITask } from "../interfaces/Task";
 import * as TaskModel from "../model/taskModel";
+import { ITask, ITodo } from "../interfaces/Task";
+import { IServiceResponse } from "../interfaces/ServiceResponse";
 
-export function getTasks() {
-  const data = TaskModel.getTasks();
+/**
+ * Get all tasks
+ *
+ * @returns Service Response
+ */
+export function getTasks(): IServiceResponse {
+  const data: ITodo[] = TaskModel.getTasks();
 
-  return data;
-}
-
-export function getTaskById(id: string) {
-  const data = TaskModel.getTaskById(id);
-
-  if (!data) {
+  if (data.length > 0) {
     return {
-      error: `Task with id: ${id} not found`,
+      data,
+    };
+  } else {
+    return {
+      message: "No tasks found",
     };
   }
-  return data;
 }
 
-export function createTask(user: ITask) {
-  TaskModel.createTask(user);
-}
+/**
+ * Get task by id
+ *
+ * @param id Task id
+ * @returns Service Response
+ */
+export function getTaskById(id: string): IServiceResponse {
+  const data = TaskModel.getTaskById(id);
 
-export function updateTask(id: string, task: ITask) {
-  const index = TaskModel.updateTask(id, task);
-
-  if (index === -1) {
+  if (data) {
+    return {
+      data,
+    };
+  } else {
     return {
       error: `Task with id ${id} not found`,
     };
   }
 }
 
-export function deleteTask(id: string) {
-  const index = TaskModel.deleteTask(id);
+/**
+ * Create a new task
+ *
+ * @param task Task object
+ * @returns Service Response
+ */
+export function createTask(task: ITask): IServiceResponse {
+  const data = TaskModel.createTask(task);
 
-  if (index === -1) {
+  if (data) {
+    return {
+      message: "Task created successfully",
+      data,
+    };
+  } else {
+    return {
+      error: "Failed to create Task",
+    };
+  }
+}
+
+/**
+ * Update a task
+ *
+ * @param id Task id
+ * @param task Task object
+ * @returns Service Response
+ */
+export function updateTask(id: string, task: ITask): IServiceResponse {
+  const data = TaskModel.updateTask(id, task);
+
+  if (data) {
+    return {
+      message: "Task updated successfully",
+      data,
+    };
+  } else {
+    return {
+      error: `Task with id ${id} not found`,
+    };
+  }
+}
+
+/**
+ * Delete a task
+ *
+ * @param id Task id
+ * @returns Service Response
+ */
+export function deleteTask(id: string): IServiceResponse {
+  const data = TaskModel.deleteTask(id);
+
+  if (data) {
+    return {
+      message: "Task deleted successfully",
+      data,
+    };
+  } else {
     return {
       error: `Task with id ${id} not found`,
     };
