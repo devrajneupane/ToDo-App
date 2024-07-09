@@ -1,0 +1,32 @@
+[
+  {
+    "id": "1",
+    "title": "Write Chapter on 'Master-Slave Morality'",
+    "desc": "Develop ideas for the contrasting moralities of master and slave classes.",
+    "status": "pending"
+  },
+  {
+    "id": "2",
+    "title": "Revise 'Thus Spoke Zarathustra'",
+    "desc": "Review and edit draft of the philosophical novel.",
+    "status": "pending"
+  },
+  {
+    "id": "3",
+    "title": "Prepare Lecture on Eternal Recurrence",
+    "desc": "Create lecture notes and outline for upcoming lecture on eternal recurrence.",
+    "status": "not started"
+  },
+  {
+    "id": "4",
+    "title": "Correspondence with Wagner",
+    "desc": "Exchange letters with Richard Wagner regarding philosophy and music.",
+    "status": "not started"
+  },
+  {
+    "id": "5",
+    "title": "Read Schopenhauer's 'The World as Will and Representation'",
+    "desc": "Study Schopenhauer's work to inform own philosophical reflections.",
+    "status": "not started"
+  }
+]
