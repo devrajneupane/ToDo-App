@@ -1,6 +1,6 @@
 import * as TaskModel from "../model/taskModel";
-import { ITask, ITodo } from "../interfaces/Task";
-import { IServiceResponse } from "../interfaces/ServiceResponse";
+import { ITask, ITodo } from "../interface/Task";
+import { IServiceResponse } from "../interface/ServiceResponse";
 
 /**
  * Get all tasks

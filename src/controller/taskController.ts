@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import { ITask } from "../interfaces/Task";
+import { ITask } from "../interface/Task";
 import * as TaskService from "../service/taskService";
 
 /**

@@ -1,6 +1,6 @@
 import * as path from "path";
 
-import { ITask, ITodo } from "../interfaces/Task";
+import { ITask, ITodo } from "../interface/Task";
 import { TASK_STATUS } from "../enums/TaskStatus";
 import { readJsonFile, writeJsonFile } from "../utils/utils";
 
