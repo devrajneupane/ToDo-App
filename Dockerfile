@@ -23,10 +23,10 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy .env, package.json and package-lock.json
-COPY .env package*.json ./
+COPY --from=build .env package*.json ./
 
 # Copy .env and tasks.json
-COPY src/tasks.json  ./dist/
+COPY --from=build src/tasks.json  ./dist/
 
 # Copy built files and necessary dependencies from the build stage
 COPY --from=build /app/dist ./dist/
@@ -37,4 +37,3 @@ EXPOSE 3000
 
 # Command to run the application
 CMD ["npm", "run", "serve"]
-
