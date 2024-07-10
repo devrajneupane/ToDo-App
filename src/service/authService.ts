@@ -36,6 +36,7 @@ export async function login(body: Pick<IUser, "email" | "password">) {
     id: existingUser.id,
     name: existingUser.name,
     email: existingUser.email,
+    permissions: existingUser.permissions,
   };
 
   return signPayload(payload);
@@ -47,15 +48,16 @@ export async function login(body: Pick<IUser, "email" | "password">) {
  * @param token
  */
 export async function refresh(token: string) {
-  const { id, email, name } = verify(token, config.jwt.secret!) as Pick<
-    IUser,
-    "id" | "email" | "name"
-  >;
+  const { id, email, name, permissions } = verify(
+    token,
+    config.jwt.secret!,
+  ) as Pick<IUser, "id" | "email" | "name" | "permissions">;
 
   const payload = {
     id: id,
     email: email,
     name: name,
+    permissions: permissions,
   };
 
   return signPayload(payload);
