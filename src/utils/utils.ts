@@ -1,4 +1,10 @@
 import * as fs from "fs";
+import crypto, { UUID } from "crypto";
+
+import { sign, verify } from "jsonwebtoken";
+
+import config from "../config";
+import { IUser } from "../interface/User";
 
 /**
  * Read JSON file and parse content
@@ -46,4 +52,38 @@ export function writeJsonFile(
       resolve();
     });
   });
+}
+
+/**
+ * Generate UUID
+ *
+ * @returns UUID
+ */
+export function getUUID(): UUID {
+  return crypto.randomUUID();
+}
+
+/**
+ * Sign payload with JWT secret
+ *
+ * @param payload User data
+ * @returns accessToken and refreshToken
+ */
+export function signPayload(payload: Omit<IUser, "password">): {
+  accessToken: string;
+  refreshToken: string;
+  error?: string;
+} {
+  const accessToken = sign(payload, config.jwt.secret!, {
+    expiresIn: config.jwt.accessTokenExpiryMS,
+  });
+
+  const refreshToken = sign(payload, config.jwt.secret!, {
+    expiresIn: config.jwt.refreshTokenExpiryMS,
+  });
+
+  return {
+    accessToken,
+    refreshToken,
+  };
 }
