@@ -4,7 +4,7 @@ import { ITask, ITodo } from "../interface/Task";
 import { TASK_STATUS } from "../enums/TaskStatus";
 import { readJsonFile, writeJsonFile } from "../utils/utils";
 
-const filePath = path.resolve(__dirname, "../tasks.json");
+const filePath = path.resolve(__dirname, "../../data/tasks.json");
 let tasks: ITodo[] = [];
 
 readJsonFile(filePath)
