@@ -1,8 +1,13 @@
 import * as path from "path";
+import { UUID } from "crypto";
 
+import { ROLE } from "../enums/Role";
 import { ITask, ITodo } from "../interface/Task";
 import { TASK_STATUS } from "../enums/TaskStatus";
-import { readJsonFile, writeJsonFile } from "../utils/utils";
+import loggerWithNameSpace from "../utils/logger";
+import { getUUID, readJsonFile, writeJsonFile } from "../utils/utils";
+
+const logger = loggerWithNameSpace(__filename);
 
 const filePath = path.resolve(__dirname, "../../data/tasks.json");
 let tasks: ITodo[] = [];
@@ -12,14 +17,18 @@ readJsonFile(filePath)
     tasks = jsonData;
   })
   .catch((err) => {
-    console.error("Error reading JSON file:", err);
+    logger.error("Error reading JSON file:", err);
   });
 
 /**
  * Get all tasks
  */
-export function getTasks(): ITodo[] {
-  return tasks;
+export function getTasks(userId: UUID, permissions: ROLE[]): ITodo[] {
+  if (permissions.includes(ROLE.ADMIN)) return tasks;
+
+  const result = tasks.filter(({ userId: id }) => id === userId);
+  if (!result || result.length == 0) throw new Error("No tasks found");
+  return result;
 }
 
 /**
@@ -28,9 +37,17 @@ export function getTasks(): ITodo[] {
  * @param id Task id
  * @returns Task object if found or null
  */
-export function getTaskById(id: string): ITodo | null {
-  const task = tasks.find(({ id: userId }) => userId === id);
-  return !task ? null : task;
+export function getTaskById(
+  taskId: UUID,
+  userId: UUID,
+  permissions: ROLE[],
+): ITodo {
+  const task = tasks.find(({ taskId: id }) => id === taskId);
+  if (!task || (!permissions.includes(ROLE.ADMIN) && task.userId !== userId)) {
+    throw new Error("Can't access task");
+  }
+
+  return task;
 }
 
 /**
@@ -39,19 +56,20 @@ export function getTaskById(id: string): ITodo | null {
  * @param task Task object
  * @returns Task object
  */
-export function createTask(task: ITask): ITodo {
+export function createTask(userId: UUID, task: ITask): ITodo {
   const newTask: ITodo = {
-    id: `${tasks.length + 1}`,
+    taskId: getUUID(),
+    userId,
     ...task,
   };
   tasks.push(newTask);
 
   writeJsonFile(filePath, tasks)
     .then(() => {
-      console.log("JSON file has been written successfully!");
+      logger.info("JSON file has been written successfully!");
     })
-    .catch((err) => {
-      console.error("Error writing JSON file:", err);
+    .catch((error) => {
+      logger.error(error.message);
     });
 
   return newTask;
@@ -60,23 +78,24 @@ export function createTask(task: ITask): ITodo {
 /**
  * Update task
  *
- * @param id Task id
+ * @param taskId Task id
  * @param task Task object
  * @returns Task object if found or null
  */
-export function updateTask(id: string, task: ITask): ITodo | null {
-  const index = tasks.findIndex((task) => task.id === id);
+export function updateTask(taskId: UUID, userId: UUID, task: ITask): ITodo {
+  const index = tasks.findIndex((task) => task.taskId === taskId);
 
-  if (index === -1) return null;
+  if (index === -1 || tasks[index].userId !== userId)
+    throw new Error("Can't update task");
 
   tasks[index] = { ...tasks[index], ...task };
 
   writeJsonFile(filePath, tasks)
     .then(() => {
-      console.log("JSON file has been written successfully!");
+      logger.info("JSON file has been written successfully!");
     })
-    .catch((err) => {
-      console.error("Error writing JSON file:", err);
+    .catch((error) => {
+      logger.error(error.message);
     });
 
   return tasks[index];
@@ -88,21 +107,21 @@ export function updateTask(id: string, task: ITask): ITodo | null {
  * @param id Task id
  * @returns Task object if found or null
  */
-export function deleteTask(id: string): ITodo | null {
-  const index = tasks.findIndex((task) => task.id === id);
-
-  if (index === -1) return null;
-  const data = tasks[index];
+export function deleteTask(taskId: UUID, userId: UUID): ITodo | null {
+  const index = tasks.findIndex((task) => task.taskId === taskId);
+  const task = tasks[index];
+  if (index === -1 || task.userId !== userId)
+    throw new Error("Can't delete task");
 
   tasks.splice(index, 1);
 
   writeJsonFile(filePath, tasks)
     .then(() => {
-      console.log("JSON file has been written successfully!");
+      logger.info("JSON file has been written successfully!");
     })
-    .catch((err) => {
-      console.error("Error writing JSON file:", err);
+    .catch((error) => {
+      logger.error(error.message);
     });
 
-  return data;
+  return task;
 }

@@ -7,15 +7,16 @@ import {
   deleteTask,
   createTask,
 } from "../controller/taskController";
-import { auth } from "../middleware/auth";
+import { ROLE } from "../enums/Role";
+import { authenticate, authorize } from "../middleware/auth";
 
 const router = Router();
 
 // Define the routes
-router.get("/", auth, getTasks);
-router.get("/:id", auth, getTaskById);
-router.post("/", auth, createTask);
-router.patch("/:id", auth, updateTask);
-router.delete("/:id", auth, deleteTask);
+router.get("/", authenticate, authorize([ROLE.USER, ROLE.ADMIN]), getTasks);
+router.get("/:id", authenticate, authorize([ ROLE.USER, ROLE.ADMIN ]), getTaskById);
+router.post("/", authenticate, authorize(([ ROLE.USER, ROLE.ADMIN ])), createTask);
+router.patch("/:id", authenticate, authorize(ROLE.USER), updateTask);
+router.delete("/:id", authenticate, authorize(ROLE.USER), deleteTask);
 
 export default router;

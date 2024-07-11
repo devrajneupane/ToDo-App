@@ -1,14 +1,23 @@
+import { UUID } from "crypto";
+
 import * as TaskModel from "../model/taskModel";
+import * as userModel from "../model/userModel";
 import { ITask, ITodo } from "../interface/Task";
+import loggerWithNameSpace from "../utils/logger";
 import { IServiceResponse } from "../interface/ServiceResponse";
+import { permission } from "process";
+
+const logger = loggerWithNameSpace(__filename);
 
 /**
  * Get all tasks
  *
  * @returns Service Response
  */
-export function getTasks(): IServiceResponse {
-  const data: ITodo[] = TaskModel.getTasks();
+export function getTasks(userId: UUID): IServiceResponse {
+  const user = userModel.getUserInfo(userId)
+  const data: ITodo[] = TaskModel.getTasks(user.id, user.permissions);
+  logger.info("Retreived all tasks");
 
   if (data.length > 0) {
     return {
@@ -24,11 +33,13 @@ export function getTasks(): IServiceResponse {
 /**
  * Get task by id
  *
- * @param id Task id
+ * @param taskId Task id
  * @returns Service Response
  */
-export function getTaskById(id: string): IServiceResponse {
-  const data = TaskModel.getTaskById(id);
+export function getTaskById(taskId: UUID, userId: UUID): IServiceResponse {
+  const user = userModel.getUserInfo(userId)
+  const data = TaskModel.getTaskById(taskId, userId, user.permissions);
+  logger.info(`Retreived task with id ${taskId}`);
 
   if (data) {
     return {
@@ -36,7 +47,7 @@ export function getTaskById(id: string): IServiceResponse {
     };
   } else {
     return {
-      error: `Task with id ${id} not found`,
+      error: `Task with id ${taskId} not found`,
     };
   }
 }
@@ -47,8 +58,9 @@ export function getTaskById(id: string): IServiceResponse {
  * @param task Task object
  * @returns Service Response
  */
-export function createTask(task: ITask): IServiceResponse {
-  const data = TaskModel.createTask(task);
+export function createTask(userId: UUID, task: ITask): IServiceResponse {
+  const data = TaskModel.createTask(userId, task);
+  logger.info("Task created successfully");
 
   if (data) {
     return {
@@ -65,12 +77,13 @@ export function createTask(task: ITask): IServiceResponse {
 /**
  * Update a task
  *
- * @param id Task id
+ * @param taskId Task id
  * @param task Task object
  * @returns Service Response
  */
-export function updateTask(id: string, task: ITask): IServiceResponse {
-  const data = TaskModel.updateTask(id, task);
+export function updateTask(taskId: UUID, userId: UUID, task: ITask): IServiceResponse {
+  const data = TaskModel.updateTask(taskId, userId, task);
+  logger.info("Task updated successfully");
 
   if (data) {
     return {
@@ -79,7 +92,7 @@ export function updateTask(id: string, task: ITask): IServiceResponse {
     };
   } else {
     return {
-      error: `Task with id ${id} not found`,
+      error: `Task with id ${taskId} not found`,
     };
   }
 }
@@ -90,8 +103,9 @@ export function updateTask(id: string, task: ITask): IServiceResponse {
  * @param id Task id
  * @returns Service Response
  */
-export function deleteTask(id: string): IServiceResponse {
-  const data = TaskModel.deleteTask(id);
+export function deleteTask(taskId: UUID, userId: UUID): IServiceResponse {
+  const data = TaskModel.deleteTask(taskId, userId);
+  logger.info("Task deleted successfully");
 
   if (data) {
     return {
@@ -100,7 +114,7 @@ export function deleteTask(id: string): IServiceResponse {
     };
   } else {
     return {
-      error: `Task with id ${id} not found`,
+      error: `Task with id ${taskId} not found`,
     };
   }
 }
