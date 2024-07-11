@@ -23,7 +23,7 @@ export async function getUserInfo(
   next: NextFunction,
 ) {
   try {
-    const id = req.user?.id as UUID;
+    const id = req.query.id ? (req.query.id as UUID) : (req.user!.id as UUID);
 
     const serviceData = await UserService.getUserInfo(id);
 
@@ -95,7 +95,7 @@ export async function deleteUser(
   next: NextFunction,
 ) {
   try {
-    const id = req.user?.id as UUID;
+    const id = req.query.id as UUID;
     const serviceData = await UserService.deleteUser(id);
 
     res.status(HttpStatusCodes.OK).json(serviceData);
