@@ -1,28 +1,38 @@
-import { Request, Response } from "express";
+import { UUID } from "crypto";
 
+import HttpStatusCodes from "http-status-codes";
+import { NextFunction, Request, Response } from "express";
+
+import { IRequest } from "../interface/auth";
+import { NotFound } from "../error/NotFound";
+import loggerWithNameSpace from "../utils/logger";
 import * as UserService from "../service/userService";
 import { GetUserQuery, IUser, Params } from "../interface/User";
+
+const logger = loggerWithNameSpace(__filename);
 
 /**
  * Get user info
  *
- * @param req Request
- * @param res Response
+ * @param req Request Object
+ * @param res Response Object
  */
 export async function getUserInfo(
-  req: Request<any, any, any, Params>,
+  req: IRequest,
   res: Response,
+  next: NextFunction,
 ) {
-  // TODO: get id of current logged in user
-  const { id } = req.query;
-  if (!id) {
-    res.status(404).json({
-      error: "missing id in query params",
-    });
-  }
+  try {
+    const id = req.user?.id as UUID;
 
-  const serviceData = await UserService.getUserInfo(id!);
-  res.status(200).json(serviceData);
+    const serviceData = await UserService.getUserInfo(id);
+
+    res.status(HttpStatusCodes.OK).json(serviceData);
+  } catch (error) {
+    logger.error("Error getting users", { error: error });
+
+    next(error);
+  }
 }
 
 /**
@@ -31,20 +41,22 @@ export async function getUserInfo(
  * @param req Request
  * @param res Response
  */
-export async function createUser(req: Request, res: Response) {
-  const { body } = req;
-  const { name, email, password } = body;
+export async function createUser(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { body } = req;
 
-  if (!name || !email || !password) {
-    res.status(404).json({
-      error: "Please provide name, email and password",
-    });
-    return;
+    const serviceData = await UserService.createUser(body);
+
+    res.status(HttpStatusCodes.CREATED).json(serviceData);
+  } catch (error) {
+    logger.error("Unable to create user", { error: error });
+
+    next(error);
   }
-
-  const data = await UserService.createUser(body);
-
-  res.json({ data });
 }
 
 /**
@@ -54,21 +66,21 @@ export async function createUser(req: Request, res: Response) {
  * @param res Response
  */
 export async function updateUser(
-  req: Request<any, any, any, Params>,
+  req: IRequest,
   res: Response,
+  next: NextFunction,
 ) {
-  const { id } = req.query;
-  const { body } = req;
-  if (!id) {
-    res.status(404).json({
-      error: "Id is required",
-    });
-    return;
+  try {
+    const id = req.query?.id as UUID;
+    const { body } = req;
+    const serviceData = await UserService.updateUser(id, body);
+
+    res.status(HttpStatusCodes.OK).json(serviceData);
+  } catch (error) {
+    logger.error("Couldn't update user", { error: error });
+
+    next(error);
   }
-
-  const serviceData = await UserService.updateUser(id, body);
-
-  res.status(200).json({ data: serviceData });
 }
 
 /**
@@ -78,19 +90,18 @@ export async function updateUser(
  * @param res Response
  */
 export async function deleteUser(
-  req: Request<any, any, any, Params>,
+  req: IRequest,
   res: Response,
+  next: NextFunction,
 ) {
-  const { id } = req.query;
+  try {
+    const id = req.user?.id as UUID;
+    const serviceData = await UserService.deleteUser(id);
 
-  if (!id) {
-    res.status(404).json({
-      error: "Id is required",
-    });
-    return;
+    res.status(HttpStatusCodes.OK).json(serviceData);
+  } catch (error) {
+    logger.error("Couldn't delete user", { error: error });
+
+    next(error);
   }
-
-  const serviceData = await UserService.deleteUser(id);
-
-  res.status(200).json(serviceData);
 }

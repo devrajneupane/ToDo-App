@@ -6,13 +6,14 @@ import {
   updateUser,
   deleteUser,
 } from "../controller/userController";
-import { auth } from "../middleware/auth";
+import { ROLE } from "../enums/Role";
+import { authenticate, authorize } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/", auth, getUserInfo);
-router.post("/", createUser);
-router.patch("/", auth, updateUser);
-router.delete("/", auth, deleteUser);
+router.get("/", authenticate, authorize(ROLE.ADMIN), getUserInfo);
+router.post("/", authenticate, authorize(ROLE.ADMIN), createUser);
+router.patch("/", authenticate, authorize(ROLE.ADMIN), updateUser);
+router.delete("/", authenticate, authorize(ROLE.ADMIN), deleteUser);
 
 export default router;

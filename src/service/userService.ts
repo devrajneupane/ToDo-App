@@ -1,8 +1,13 @@
-import { GetUserQuery, IUser } from "../interface/User";
-import bcrypt from "bcrypt";
-import * as UserModel from "../model/userModel";
-import { getUUID } from "../utils/utils";
 import { UUID } from "crypto";
+
+import bcrypt from "bcrypt";
+
+import { getUUID } from "../utils/utils";
+import * as UserModel from "../model/userModel";
+import loggerWithNameSpace from "../utils/logger";
+import { GetUserQuery, IUser } from "../interface/User";
+
+const logger = loggerWithNameSpace(__filename);
 
 /**
  * Get user info
@@ -10,14 +15,9 @@ import { UUID } from "crypto";
  * @param id User ID
  * @returns User object
  */
-export function getUserInfo(id: UUID) {
-  const data = UserModel.getUserInfo(id);
-
-  if (!data) {
-    return {
-      error: `User with id: ${id} not found`,
-    };
-  }
+export async function getUserInfo(id: UUID) {
+  const data = await UserModel.getUserInfo(id);
+  logger.info(`User ${data.name} successfully found`);
 
   return data;
 }
@@ -29,17 +29,16 @@ export function getUserInfo(id: UUID) {
  */
 export async function createUser(user: IUser) {
   const password = await bcrypt.hash(user.password, 10);
-  const userData = {
-    id: getUUID(),
-    name: user.name,
-    email: user.email,
+
+  const data = await UserModel.createUser({
+    ...user,
     password: password,
-  };
+  });
 
-  await UserModel.createUser(userData);
-
+  logger.info(`User ${data.name} successfully created `);
   return {
-    message: "User created",
+    message: "User created successfully",
+    data,
   };
 }
 
@@ -47,18 +46,24 @@ export async function createUser(user: IUser) {
  * Update user
  *
  * @param id User ID
- * @param data User data
+ * @param userData User data
  * @returns User object
  */
-export async function updateUser(id: UUID, data: IUser) {
-  const { name, email, password } = data;
+export async function updateUser(id: UUID, userData: IUser) {
+  const { name, email, password } = userData;
   const newUserData: Partial<IUser> = {};
 
   if (name) newUserData.name = name;
   if (email) newUserData.email = email;
   if (password) newUserData.password = await bcrypt.hash(password, 10);
 
-  return await UserModel.updateUser(id, newUserData);
+  const data = await UserModel.updateUser(id, newUserData);
+  logger.info(`User ${data.name} successfully updated`);
+
+  return {
+    message: "User updated successfully",
+    data,
+  };
 }
 
 /**
@@ -68,7 +73,13 @@ export async function updateUser(id: UUID, data: IUser) {
  * @returns User object
  */
 export async function deleteUser(id: UUID) {
-  return await UserModel.deleteUser(id);
+  const data = await UserModel.deleteUser(id);
+  logger.info(`User ${data.name} successfully deleted`);
+
+  return {
+    message: "User deleted successfully",
+    data,
+  };
 }
 
 /**

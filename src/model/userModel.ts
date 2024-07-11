@@ -1,9 +1,13 @@
 import * as path from "path";
-
-import { readJsonFile, writeJsonFile } from "../utils/utils";
-import { GetUserQuery, IUser } from "../interface/User";
 import { UUID } from "crypto";
 
+import { ROLE } from "../enums/Role";
+import { NotFound } from "../error/NotFound";
+import loggerWithNameSpace from "../utils/logger";
+import { GetUserQuery, IUser } from "../interface/User";
+import { getUUID, readJsonFile, writeJsonFile } from "../utils/utils";
+
+const logger = loggerWithNameSpace(__filename);
 const usersFilePath = path.resolve(__dirname, "../../data/users.json");
 
 let users: IUser[] = [];
@@ -12,19 +16,21 @@ readJsonFile(usersFilePath)
   .then((jsonData) => {
     users = jsonData;
   })
-  .catch((err) => {
-    console.error("Error reading JSON file:", err);
+  .catch((error) => {
+    throw new Error("Error reading JSON file");
   });
 
 /**
  * Get user info
  *
  * @param id User ID
- * @returns User object if found or null
+ * @returns User object if found
  */
-export function getUserInfo(id: UUID): Omit<IUser, "password"> | null {
+export function getUserInfo(id: UUID): Omit<IUser, "password"> {
   const user = users.find(({ id: userId }) => userId === id);
-  if (!user) return null;
+  if (!user) {
+    throw new NotFound(`User with id ${id} not found`);
+  }
 
   const { password, ...userInfo } = user;
 
@@ -37,22 +43,42 @@ export function getUserInfo(id: UUID): Omit<IUser, "password"> | null {
  * @param user User data
  * @returns User object if found or null
  */
-export function createUser(user: IUser): IUser {
-  const userExists = users.find(({ email }) => email === user.email);
-  if (userExists) {
-    throw new Error("User already exists");
+export function createUser(user: Omit<IUser, "id">): Omit<IUser, "password"> {
+  logger.info("Creating a User");
+  if (
+    !user ||
+    !user.name ||
+    !user.email ||
+    !user.password ||
+    user.name.length == 0 ||
+    user.email.length == 0 ||
+    user.password.length == 0
+  ) {
+    throw new Error("Invalid User details");
   }
 
-  users.push(user);
+  const userExists = users.find(({ email }) => email === user.email);
+  if (userExists) {
+    throw new Error("User with same email already exists");
+  }
+
+  const userData = {
+    id: getUUID(),
+    ...user,
+    permissions: [ROLE.USER],
+  };
+
+  users.push(userData);
 
   writeJsonFile(usersFilePath, users)
     .then(() => {
-      console.log("JSON file has been written successfully!");
+      logger.info("JSON file has been written successfully!");
     })
-    .catch((err) => {
-      console.error("Error writing JSON file:", err);
+    .catch((error) => {
+      logger.error(error.message);
     });
-  return user;
+  const { password, ...userInfo } = userData;
+  return userInfo;
 }
 
 /**
@@ -65,18 +91,20 @@ export function createUser(user: IUser): IUser {
 export function updateUser(
   id: UUID,
   userData: Partial<IUser>,
-): Omit<IUser, "password"> | null {
+): Omit<IUser, "password"> {
   const index = users.findIndex(({ id: userId }) => userId === id);
-  if (index === -1) return null;
+  if (index === -1) {
+    throw new Error(`User with id ${id} does not exists`);
+  }
 
   users[index] = { ...users[index], ...userData };
 
   writeJsonFile(usersFilePath, users)
     .then(() => {
-      console.log("JSON file has been written successfully!");
+      logger.info("JSON file has been written successfully!");
     })
-    .catch((err) => {
-      console.error("Error writing JSON file:", err);
+    .catch((error) => {
+      logger.error(error.message);
     });
 
   const { password, ...userInfo } = users[index];
@@ -89,19 +117,21 @@ export function updateUser(
  * @param id User ID
  * @returns User object if found or null
  */
-export function deleteUser(id: UUID): Omit<IUser, "password"> | null {
+export function deleteUser(id: UUID): Omit<IUser, "password"> {
   const index = users.findIndex(({ id: userId }) => userId === id);
-  if (index === -1) return null;
+  if (index === -1) {
+    throw new Error(`User with id ${id} does not exists`);
+  }
 
   const userData = users[index];
   users.splice(index, 1);
 
   writeJsonFile(usersFilePath, users)
     .then(() => {
-      console.log("JSON file has been written successfully!");
+      logger.info("JSON file has been written successfully!");
     })
-    .catch((err) => {
-      console.error("Error writing JSON file:", err);
+    .catch((error) => {
+      logger.error(error.message);
     });
 
   const { password, ...userInfo } = userData;
@@ -114,8 +144,10 @@ export function deleteUser(id: UUID): Omit<IUser, "password"> | null {
  * @param email User email
  * @returns User object if found or null
  */
-export function getUserByEmail(email: string): IUser | null {
+export function getUserByEmail(email: string): IUser {
   const user = users.find(({ email: userEmail }) => userEmail === email);
-  if (!user) return null;
+  if (!user) {
+    throw new Error(`User with email ${email} does not exists`);
+  }
   return user;
 }
