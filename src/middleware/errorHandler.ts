@@ -2,8 +2,9 @@ import { NextFunction, Response } from "express";
 import HttpStatusCodes from "http-status-codes";
 
 import { IRequest } from "../interface/auth";
-import { UnauthenticatedError } from "../error/UnauthenticatedErrors";
 import loggerWithNameSpace from "../utils/logger";
+import { BadRequestError } from "../error/BadRequestError";
+import { UnauthenticatedError } from "../error/UnauthenticatedErrors";
 
 const logger = loggerWithNameSpace(__filename);
 
@@ -28,6 +29,13 @@ export function genericErrorHandler(
       message: error.message,
     });
   }
+
+  if (error instanceof BadRequestError) {
+    return res.status(HttpStatusCodes.BAD_REQUEST).json({
+      message: error.message,
+    });
+  }
+
   return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
     message: "Internal Server Error",
   });
