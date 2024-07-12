@@ -3,6 +3,6 @@ import { Request as ExpressRequest } from 'express';
 import { IUser } from './User';
 
 export interface IRequest extends ExpressRequest {
-  user?: IUser;
+  user?: Omit<IUser, "password">;
 }
 
