@@ -6,40 +6,57 @@ import {
   updateUser,
   deleteUser,
 } from "../controller/userController";
+import {
+  createUserBodySchema,
+  updateUserBodySchema,
+  userIdQuerySchema,
+} from "../schema/user";
 import { ROLE } from "../enums/Role";
 import { validateReqBody, validateReqQuery } from "../middleware/validator";
 import { authenticate, authorize } from "../middleware/auth";
-import { createUserBodySchema, updateUserBodySchema, userIdQuerySchema } from "../schema/user";
+import { requestHandler } from "../utils/requestWrapper";
 
 const router = Router();
 
 router.get(
   "/",
-  authenticate,
-  authorize(ROLE.ADMIN),
-  validateReqQuery(userIdQuerySchema),
-  getUserInfo,
+  requestHandler([
+    authenticate,
+    authorize(ROLE.ADMIN),
+    validateReqQuery(userIdQuerySchema),
+    getUserInfo,
+  ]),
 );
+
 router.post(
   "/",
-  authenticate,
-  authorize(ROLE.ADMIN),
-  validateReqBody(createUserBodySchema),
-  createUser
+  requestHandler([
+    authenticate,
+    authorize(ROLE.ADMIN),
+    validateReqBody(createUserBodySchema),
+    createUser,
+  ]),
 );
+
 router.patch(
   "/",
-  authenticate,
-  authorize(ROLE.ADMIN),
-  validateReqBody(updateUserBodySchema),
-  updateUser
+  requestHandler([
+    authenticate,
+    authorize(ROLE.ADMIN),
+    validateReqQuery(userIdQuerySchema),
+    validateReqBody(updateUserBodySchema),
+    updateUser,
+  ]),
 );
+
 router.delete(
   "/",
-  authenticate,
-  authorize(ROLE.ADMIN),
-  validateReqQuery(userIdQuerySchema),
-  deleteUser
+  requestHandler([
+    authenticate,
+    authorize(ROLE.ADMIN),
+    validateReqQuery(userIdQuerySchema),
+    deleteUser,
+  ]),
 );
 
 export default router;

@@ -16,39 +16,53 @@ import { ROLE } from "../enums/Role";
 import { updateUserBodySchema } from "../schema/user";
 import { authenticate, authorize } from "../middleware/auth";
 import { validateReqBody, validateReqParams } from "../middleware/validator";
+import { requestHandler } from "../utils/requestWrapper";
 
 const router = Router();
 
 // Define the routes
-router.get("/", authenticate, authorize([ROLE.USER, ROLE.ADMIN]), getTasks);
+router.get(
+  "/",
+  requestHandler([authenticate, authorize([ROLE.USER, ROLE.ADMIN]), getTasks]),
+);
+
+// Get task by id
 router.get(
   "/:id",
-  authenticate,
-  authorize([ROLE.USER, ROLE.ADMIN]),
-  validateReqParams(taskIdParamSchema),
-  getTaskById,
+  requestHandler([
+    authenticate,
+    authorize([ROLE.USER, ROLE.ADMIN]),
+    validateReqParams(taskIdParamSchema),
+    getTaskById,
+  ]),
 );
 router.post(
   "/",
-  authenticate,
-  authorize([ROLE.USER, ROLE.ADMIN]),
-  validateReqBody(createTaskBodySchema),
-  createTask,
+  requestHandler([
+    authenticate,
+    authorize([ROLE.USER, ROLE.ADMIN]),
+    validateReqBody(createTaskBodySchema),
+    createTask,
+  ]),
 );
 router.patch(
   "/:id",
-  authenticate,
-  authorize(ROLE.USER),
-  validateReqParams(taskIdParamSchema),
-  validateReqBody(updateTaskBodySchema),
-  updateTask,
+  requestHandler([
+    authenticate,
+    authorize(ROLE.USER),
+    validateReqParams(taskIdParamSchema),
+    validateReqBody(updateTaskBodySchema),
+    updateTask,
+  ]),
 );
 router.delete(
   "/:id",
-  authenticate,
-  authorize(ROLE.USER),
-  validateReqParams(taskIdParamSchema),
-  deleteTask,
+  requestHandler([
+    authenticate,
+    authorize(ROLE.USER),
+    validateReqParams(taskIdParamSchema),
+    deleteTask,
+  ]),
 );
 
 export default router;
