@@ -3,7 +3,7 @@ import crypto, { UUID } from "crypto";
 
 import { sign, verify } from "jsonwebtoken";
 
-import config from "../config";
+import { env } from "../config";
 import { IUser } from "../interface/User";
 
 /**
@@ -74,12 +74,12 @@ export function signPayload(payload: Omit<IUser, "password">): {
   refreshToken: string;
   error?: string;
 } {
-  const accessToken = sign(payload, config.jwt.secret!, {
-    expiresIn: config.jwt.accessTokenExpiryMS,
+  const accessToken = sign(payload, env.jwt.secret!, {
+    expiresIn: env.jwt.accessTokenExpiryMS,
   });
 
-  const refreshToken = sign(payload, config.jwt.secret!, {
-    expiresIn: config.jwt.refreshTokenExpiryMS,
+  const refreshToken = sign(payload, env.jwt.secret!, {
+    expiresIn: env.jwt.refreshTokenExpiryMS,
   });
 
   return {
