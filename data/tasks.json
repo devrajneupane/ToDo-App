@@ -1,12 +1,5 @@
 [
   {
-    "taskId": "806aac1a-0057-44f4-bfea-b30422529c34",
-    "userId": "06f44fc3-3b48-4e2e-abfe-b5abab5d933f",
-    "title": "Write Chapter on 'Master-Slave Morality'",
-    "desc": "Develop ideas for the contrasting moralities of master and slave classes.",
-    "status": "pending"
-  },
-  {
     "taskId": "10788508-817b-4177-8d5f-6ce86c3c8d3a",
     "userId": "9da1e246-03a8-4272-be8e-1cf8f551c68f",
     "title": "Revise 'Thus Spoke Zarathustra'",
@@ -33,6 +26,12 @@
     "title": "Read Schopenhauer's 'The World as Will and Representation'",
     "desc": "Study Schopenhauer's work to inform own philosophical reflections.",
     "status": "not started"
+  },
+  {
+    "taskId": "c637e8c4-3d04-45cd-b7c3-36af97102299",
+    "userId": "80b223de-a9c8-437d-b932-8f540452bb45",
+    "title": "Write Chapter on 'Master-Slave Morality'",
+    "desc": "Develop ideas for the contrasting moralities of master and slave classes.",
+    "status": "pending"
   }
 ]
-
