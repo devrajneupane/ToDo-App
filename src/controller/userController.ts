@@ -1,7 +1,7 @@
 import { UUID } from "crypto";
 
-import HttpStatusCodes from "http-status-codes";
-import { NextFunction, Request, Response } from "express";
+import { Response } from "express";
+import { StatusCodes } from "http-status-codes";
 
 import { IRequest } from "../interface/auth";
 import { NotFound } from "../error/NotFound";
@@ -12,27 +12,19 @@ import { GetUserQuery, IUser, Params } from "../interface/User";
 const logger = loggerWithNameSpace(__filename);
 
 /**
- * Get user info
+ * Get user info for given user id or current user if user id is not provided
  *
  * @param req Request Object
  * @param res Response Object
  */
-export async function getUserInfo(
-  req: IRequest,
-  res: Response,
-  next: NextFunction,
-) {
-  try {
-    const id = req.query.id ? (req.query.id as UUID) : (req.user!.id as UUID);
+export async function getUserInfo(req: IRequest, res: Response) {
+  const id = req.query.id ? (req.query.id as UUID) : (req.user!.id as UUID);
+  logger.info(`Getting information for user ${id}`);
 
-    const serviceData = await UserService.getUserInfo(id);
+  const serviceData = await UserService.getUserInfo(id);
+  logger.info(`Retrived information for user ${id}`);
 
-    res.status(HttpStatusCodes.OK).json(serviceData);
-  } catch (error) {
-    logger.error("Error getting users", { error: error });
-
-    next(error);
-  }
+  res.status(StatusCodes.OK).json(serviceData);
 }
 
 /**
@@ -41,22 +33,14 @@ export async function getUserInfo(
  * @param req Request
  * @param res Response
  */
-export async function createUser(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
-  try {
-    const { body } = req;
+export async function createUser(req: IRequest, res: Response) {
+  const { body } = req;
+  logger.info(`Creating new user ${body.name}`);
 
-    const serviceData = await UserService.createUser(body);
+  const serviceData = await UserService.createUser(body);
+  logger.info(`User ${body.name} created successfully`);
 
-    res.status(HttpStatusCodes.CREATED).json(serviceData);
-  } catch (error) {
-    logger.error("Unable to create user", { error: error });
-
-    next(error);
-  }
+  res.status(StatusCodes.CREATED).json(serviceData);
 }
 
 /**
@@ -65,22 +49,15 @@ export async function createUser(
  * @param req Request
  * @param res Response
  */
-export async function updateUser(
-  req: IRequest,
-  res: Response,
-  next: NextFunction,
-) {
-  try {
-    const id = req.query?.id as UUID;
-    const { body } = req;
-    const serviceData = await UserService.updateUser(id, body);
+export async function updateUser(req: IRequest, res: Response) {
+  const id = req.query?.id as UUID;
+  logger.info(`Updating user ${id}`);
 
-    res.status(HttpStatusCodes.OK).json(serviceData);
-  } catch (error) {
-    logger.error("Couldn't update user", { error: error });
+  const { body } = req;
+  const serviceData = await UserService.updateUser(id, body);
+  logger.info(`User ${id} updated successfully`);
 
-    next(error);
-  }
+  res.status(StatusCodes.OK).json(serviceData);
 }
 
 /**
@@ -89,19 +66,12 @@ export async function updateUser(
  * @param req Request
  * @param res Response
  */
-export async function deleteUser(
-  req: IRequest,
-  res: Response,
-  next: NextFunction,
-) {
-  try {
-    const id = req.query.id as UUID;
-    const serviceData = await UserService.deleteUser(id);
+export async function deleteUser(req: IRequest, res: Response) {
+  const id = req.query.id as UUID;
+  logger.info(`Deleting user ${id}`);
 
-    res.status(HttpStatusCodes.OK).json(serviceData);
-  } catch (error) {
-    logger.error("Couldn't delete user", { error: error });
+  const serviceData = await UserService.deleteUser(id);
+  logger.info(`User ${id} deleted successfully`);
 
-    next(error);
-  }
+  res.status(StatusCodes.OK).json(serviceData);
 }

@@ -1,8 +1,11 @@
 import * as path from "path";
 import { UUID } from "crypto";
 
+import { StatusCodes } from "http-status-codes";
+
 import { ROLE } from "../enums/Role";
 import { NotFound } from "../error/NotFound";
+import { BaseError } from "../error/BaseError";
 import loggerWithNameSpace from "../utils/logger";
 import { GetUserQuery, IUser } from "../interface/User";
 import { getUUID, readJsonFile, writeJsonFile } from "../utils/utils";
@@ -43,30 +46,17 @@ export function getUserInfo(id: UUID): Omit<IUser, "password"> {
  * @param user User data
  * @returns User object if found or null
  */
-export function createUser(user: Omit<IUser, "id">): Omit<IUser, "password"> {
+export async function createUser(
+  user: Omit<IUser, "id">,
+): Promise<Omit<IUser, "password">> {
   logger.info("Creating a User");
-  if (
-    !user ||
-    !user.name ||
-    !user.email ||
-    !user.password ||
-    user.name.length == 0 ||
-    user.email.length == 0 ||
-    user.password.length == 0
-  ) {
-    throw new Error("Invalid User details");
-  }
 
   const userExists = users.find(({ email }) => email === user.email);
   if (userExists) {
-    throw new Error("User with same email already exists");
+    throw new BaseError("User with same email already exists", StatusCodes.CONFLICT);
   }
 
-  const userData = {
-    id: getUUID(),
-    ...user,
-    permissions: [ROLE.USER],
-  };
+  const userData = { id: getUUID(), ...user, permissions: [ROLE.USER] };
 
   users.push(userData);
 
@@ -94,7 +84,7 @@ export function updateUser(
 ): Omit<IUser, "password"> {
   const index = users.findIndex(({ id: userId }) => userId === id);
   if (index === -1) {
-    throw new Error(`User with id ${id} does not exists`);
+    throw new NotFound(`User with id ${id} does not exists`);
   }
 
   users[index] = { ...users[index], ...userData };
@@ -120,7 +110,7 @@ export function updateUser(
 export function deleteUser(id: UUID): Omit<IUser, "password"> {
   const index = users.findIndex(({ id: userId }) => userId === id);
   if (index === -1) {
-    throw new Error(`User with id ${id} does not exists`);
+    throw new NotFound(`User with id ${id} does not exists`);
   }
 
   const userData = users[index];

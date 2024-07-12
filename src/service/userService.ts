@@ -4,10 +4,7 @@ import bcrypt from "bcrypt";
 
 import { getUUID } from "../utils/utils";
 import * as UserModel from "../model/userModel";
-import loggerWithNameSpace from "../utils/logger";
 import { GetUserQuery, IUser } from "../interface/User";
-
-const logger = loggerWithNameSpace(__filename);
 
 /**
  * Get user info
@@ -17,9 +14,11 @@ const logger = loggerWithNameSpace(__filename);
  */
 export async function getUserInfo(id: UUID) {
   const data = await UserModel.getUserInfo(id);
-  logger.info(`User ${data.name} successfully found`);
 
-  return data;
+  return {
+    message: "User info retrieved successfully",
+    data,
+  };
 }
 
 /**
@@ -35,7 +34,6 @@ export async function createUser(user: IUser) {
     password: password,
   });
 
-  logger.info(`User ${data.name} successfully created `);
   return {
     message: "User created successfully",
     data,
@@ -58,7 +56,6 @@ export async function updateUser(id: UUID, userData: IUser) {
   if (password) newUserData.password = await bcrypt.hash(password, 10);
 
   const data = await UserModel.updateUser(id, newUserData);
-  logger.info(`User ${data.name} successfully updated`);
 
   return {
     message: "User updated successfully",
@@ -74,7 +71,6 @@ export async function updateUser(id: UUID, userData: IUser) {
  */
 export async function deleteUser(id: UUID) {
   const data = await UserModel.deleteUser(id);
-  logger.info(`User ${data.name} successfully deleted`);
 
   return {
     message: "User deleted successfully",
