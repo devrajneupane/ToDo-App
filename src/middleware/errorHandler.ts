@@ -1,42 +1,58 @@
-import { NextFunction, Response } from "express";
-import HttpStatusCodes from "http-status-codes";
+import { ValidationError } from "joi";
+import { StatusCodes } from "http-status-codes";
+import { Response, NextFunction } from "express";
 
 import { IRequest } from "../interface/auth";
+import { BaseError } from "../error/BaseError";
 import loggerWithNameSpace from "../utils/logger";
 import { BadRequestError } from "../error/BadRequestError";
 import { UnauthenticatedError } from "../error/UnauthenticatedErrors";
 
 const logger = loggerWithNameSpace(__filename);
 
-export function notFoundError(req: IRequest, res: Response) {
-  return res.status(HttpStatusCodes.NOT_FOUND).json({
-    message: "Not Found",
+/**
+ * Middleware to respond to Not Found errors
+ *
+ * @param req request object.
+ * @param res Express response object.
+ * @returns HTTP response with a JSON object.
+ */
+export function notFoundError(
+  req: IRequest,
+  res: Response,
+): Response<Record<string, string>> {
+  logger.error("Resource Not Found");
+  return res.status(StatusCodes.NOT_FOUND).json({
+    message: "Resource Not Found",
   });
 }
 
+/**
+ * Middleware to respond to generic errors
+ *
+ * @param error Error object to handle.
+ * @param req request object.
+ * @param res Express response object.
+ * @returns HTTP response with a JSON object.
+ */
 export function genericErrorHandler(
   error: Error,
   req: IRequest,
   res: Response,
   next: NextFunction,
-) {
+): Response<Record<string, string>> {
   if (error.stack) {
     logger.error(error.stack);
   }
 
-  if (error instanceof UnauthenticatedError) {
-    return res.status(HttpStatusCodes.UNAUTHORIZED).json({
-      message: error.message,
-    });
+  switch (true) {
+    case error instanceof BaseError:
+      return res.status(error.statusCode).json({
+        message: error.message,
+      });
+    default:
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: "Internal Server Errror",
+      });
   }
-
-  if (error instanceof BadRequestError) {
-    return res.status(HttpStatusCodes.BAD_REQUEST).json({
-      message: error.message,
-    });
-  }
-
-  return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
-    message: "Internal Server Error",
-  });
 }
