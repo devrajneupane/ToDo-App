@@ -40,6 +40,45 @@ npm start
 
 The server will start on the port specified in your `.env` file.
 
+### Using docker
+
+Docker can be used for both development and deployment purpose.
+
+<details>
+
+<summary>For development</summary>
+
+1. Build image
+
+    ```bash
+    docker build -t <repo/image_name>:<tag> -f=./Dockerfile.dev .
+    ```
+
+1. Create and run container with live volumes for development
+
+    ```bash
+    docker run -d -v .:/app -p 8080:3000 <repo/image_name>:<tag>
+    ```
+
+</details>
+<details>
+
+<summary>For deployment</summary>
+
+1. Build image
+
+    ```bash
+   docker build  -t <repo/image_name>:<tag> -f Dockerfile .
+    ```
+
+1. Create and run container for deployment
+
+    ```bash
+   docker run -d -p 8081:3000 <repo/image_name>:<tag>
+    ```
+
+</details>
+
 ### Available Routes
 
 #### Task Routes
