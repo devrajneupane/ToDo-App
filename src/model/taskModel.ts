@@ -48,7 +48,9 @@ export function getTaskById(
   permissions: ROLE[],
 ): ITodo {
   const task = tasks.find(({ taskId: id }) => id === taskId);
-  if (!task || (!permissions.includes(ROLE.ADMIN) && task.userId !== userId)) {
+
+  if (!task) throw new NotFound(`Task ${taskId} does not exists`);
+  if (!permissions.includes(ROLE.ADMIN) && task.userId !== userId) {
     throw new UnauthorizedError("Can't access task");
   }
 
