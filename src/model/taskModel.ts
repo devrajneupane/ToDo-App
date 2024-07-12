@@ -2,9 +2,11 @@ import * as path from "path";
 import { UUID } from "crypto";
 
 import { ROLE } from "../enums/Role";
+import { NotFound } from "../error/NotFound";
 import { ITask, ITodo } from "../interface/Task";
 import { TASK_STATUS } from "../enums/TaskStatus";
 import loggerWithNameSpace from "../utils/logger";
+import { UnauthorizedError } from "../error/UnauthorizedError";
 import { getUUID, readJsonFile, writeJsonFile } from "../utils/utils";
 
 const logger = loggerWithNameSpace(__filename);
@@ -22,12 +24,15 @@ readJsonFile(filePath)
 
 /**
  * Get all tasks
+ *
+ * @param userId User ID
+ * @param permissions User permissions
+ * @returns Array of `ITodo` objects
  */
 export function getTasks(userId: UUID, permissions: ROLE[]): ITodo[] {
   if (permissions.includes(ROLE.ADMIN)) return tasks;
 
   const result = tasks.filter(({ userId: id }) => id === userId);
-  if (!result || result.length == 0) throw new Error("No tasks found");
   return result;
 }
 
@@ -44,7 +49,7 @@ export function getTaskById(
 ): ITodo {
   const task = tasks.find(({ taskId: id }) => id === taskId);
   if (!task || (!permissions.includes(ROLE.ADMIN) && task.userId !== userId)) {
-    throw new Error("Can't access task");
+    throw new UnauthorizedError("Can't access task");
   }
 
   return task;
@@ -57,6 +62,7 @@ export function getTaskById(
  * @returns Task object
  */
 export function createTask(userId: UUID, task: ITask): ITodo {
+  task.status = task.status || TASK_STATUS.NOTSTARTED;
   const newTask: ITodo = {
     taskId: getUUID(),
     userId,
@@ -86,7 +92,7 @@ export function updateTask(taskId: UUID, userId: UUID, task: ITask): ITodo {
   const index = tasks.findIndex((task) => task.taskId === taskId);
 
   if (index === -1 || tasks[index].userId !== userId)
-    throw new Error("Can't update task");
+    throw new UnauthorizedError("Can't update task");
 
   tasks[index] = { ...tasks[index], ...task };
 
@@ -107,11 +113,12 @@ export function updateTask(taskId: UUID, userId: UUID, task: ITask): ITodo {
  * @param id Task id
  * @returns Task object if found or null
  */
-export function deleteTask(taskId: UUID, userId: UUID): ITodo | null {
+export function deleteTask(taskId: UUID, userId: UUID): ITodo {
   const index = tasks.findIndex((task) => task.taskId === taskId);
   const task = tasks[index];
-  if (index === -1 || task.userId !== userId)
-    throw new Error("Can't delete task");
+
+  if (index === -1) throw new NotFound(`Task ${taskId} does not exists`);
+  if (task.userId !== userId) throw new UnauthorizedError("Can't delete task");
 
   tasks.splice(index, 1);
 

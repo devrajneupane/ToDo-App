@@ -17,10 +17,9 @@ export const createTaskBodySchema = Joi.object({
     "any.required": "Descripition of task is required",
   }),
   status: Joi.string()
-    .required()
+    .optional()
     .valid(...Object.values(TASK_STATUS))
     .messages({
-      "any.required": "Status of task is required",
       "any.only": `Status must be one of ${Object.values(TASK_STATUS).join(", ")}`,
     })
     .custom(checkStatus),

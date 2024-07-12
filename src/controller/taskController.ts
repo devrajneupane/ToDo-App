@@ -1,7 +1,7 @@
 import { UUID } from "crypto";
 
 import { Request, Response } from "express";
-import HttpStatusCodes from "http-status-codes";
+import { StatusCodes } from "http-status-codes";
 
 import { ITask } from "../interface/Task";
 import { IRequest } from "../interface/auth";
@@ -17,18 +17,13 @@ const logger = loggerWithNameSpace(__filename);
  * @param res Response Object
  */
 export function getTasks(req: IRequest, res: Response) {
-  try {
-    const userId = req.user?.id as UUID;
-    const serviceData = TaskService.getTasks(userId);
+  const userId = req.user?.id as UUID;
+  logger.info(`Getting all tasks for user ${userId}`);
 
-    res.status(HttpStatusCodes.OK).json(serviceData);
-  } catch (error) {
-    if (error instanceof Error) {
-      logger.error(error.message);
-    } else {
-      logger.error("An unexpected error occurred");
-    }
-  }
+  const serviceData = TaskService.getTasks(userId);
+  logger.info(`Retrived all tasks for user ${userId}`);
+
+  res.status(StatusCodes.OK).json(serviceData);
 }
 
 /**
@@ -38,19 +33,14 @@ export function getTasks(req: IRequest, res: Response) {
  * @param res Response Object
  */
 export function getTaskById(req: IRequest, res: Response) {
-  try {
-    const taskId = req.params?.id as UUID;
-    const userId = req.user?.id as UUID;
-    const serviceData = TaskService.getTaskById(taskId, userId);
+  const taskId = req.params?.id as UUID;
+  const userId = req.user?.id as UUID;
+  logger.info(`Getting task ${taskId} for user ${userId}`);
 
-    res.status(HttpStatusCodes.OK).send(serviceData);
-  } catch (error) {
-    if (error instanceof Error) {
-      logger.error(error.message);
-    } else {
-      logger.error("An unexpected error occurred");
-    }
-  }
+  const serviceData = TaskService.getTaskById(taskId, userId);
+  logger.info(`Retrived task ${taskId} for user ${userId}`);
+
+  res.status(StatusCodes.OK).send(serviceData);
 }
 
 /**
@@ -60,28 +50,16 @@ export function getTaskById(req: IRequest, res: Response) {
  * @param res Response Object
  */
 export function createTask(req: IRequest, res: Response) {
-  try {
-    const userId = req.user?.id as UUID;
-    const body: ITask = req.body;
-    if (Object.keys(body).length === 0) {
-      res.status(HttpStatusCodes.NOT_FOUND).send({
-        error: "Task details is missing",
-      });
-      return;
-    }
-    const serviceData = TaskService.createTask(userId, body);
-    if (serviceData.data) {
-      res.status(HttpStatusCodes.CREATED).send(serviceData);
-    } else {
-      res.status(HttpStatusCodes.BAD_REQUEST).send(serviceData);
-    }
-  } catch (error) {
-    if (error instanceof Error) {
-      logger.error(error.message);
-    } else {
-      logger.error("An unexpected error occurred");
-    }
-  }
+  const userId = req.user?.id as UUID;
+  const body: ITask = req.body;
+  logger.info(`Creating new task for user ${userId}`);
+
+  const serviceData = TaskService.createTask(userId, body);
+  // FIX: can't access taskId
+  // logger.info(`Task ${serviceData.data.taskId} created successfully`);
+  logger.info(`Task created successfully`);
+
+  res.status(StatusCodes.CREATED).send(serviceData);
 }
 
 /**
@@ -91,24 +69,15 @@ export function createTask(req: IRequest, res: Response) {
  * @param res Response Object
  */
 export function updateTask(req: IRequest, res: Response) {
-  try {
-    const taskId = req.params?.id as UUID;
-    const userId = req.user?.id as UUID;
-    const { body } = req;
-    const serviceData = TaskService.updateTask(taskId, userId, body);
+  const taskId = req.params?.id as UUID;
+  const userId = req.user?.id as UUID;
+  const { body } = req;
+  logger.info(`Updating task ${taskId}`);
 
-    if (serviceData.data) {
-      res.status(HttpStatusCodes.OK).send(serviceData);
-    } else {
-      res.status(HttpStatusCodes.BAD_REQUEST).send(serviceData);
-    }
-  } catch (error) {
-    if (error instanceof Error) {
-      logger.error(error.message);
-    } else {
-      logger.error("An unexpected error occurred");
-    }
-  }
+  const serviceData = TaskService.updateTask(taskId, userId, body);
+  logger.info(`Task ${taskId} updated successfully`);
+
+  res.status(StatusCodes.OK).send(serviceData);
 }
 
 /**
@@ -118,21 +87,12 @@ export function updateTask(req: IRequest, res: Response) {
  * @param res Response Object
  */
 export function deleteTask(req: IRequest, res: Response) {
-  try {
-    const userId = req.user?.id as UUID;
-    const taskId = req.params?.id as UUID;
-    const serviceData = TaskService.deleteTask(taskId, userId);
+  const userId = req.user?.id as UUID;
+  const taskId = req.params?.id as UUID;
+  logger.info(`Deleting task ${taskId}`);
 
-    if (serviceData.data) {
-      res.status(HttpStatusCodes.OK).send(serviceData);
-    } else {
-      res.status(HttpStatusCodes.BAD_REQUEST).send(serviceData);
-    }
-  } catch (error) {
-    if (error instanceof Error) {
-      logger.error(error.message);
-    } else {
-      logger.error("An unexpected error occurred");
-    }
-  }
+  const serviceData = TaskService.deleteTask(taskId, userId);
+  logger.info(`Task ${taskId} deleted successfully`);
+
+  res.status(StatusCodes.OK).send(serviceData);
 }
