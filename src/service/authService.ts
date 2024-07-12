@@ -1,10 +1,10 @@
 import bcrypt from "bcrypt";
 import { sign, verify } from "jsonwebtoken";
 
-import config from "../config";
+import { env } from "../config";
 import { IUser } from "../interface/User";
-import { getUserByEmail } from "./userService";
 import { signPayload } from "../utils/utils";
+import { getUserByEmail } from "./userService";
 
 /**
  * Login user
@@ -50,7 +50,7 @@ export async function login(body: Pick<IUser, "email" | "password">) {
 export async function refresh(token: string) {
   const { id, email, name, permissions } = verify(
     token,
-    config.jwt.secret!,
+    env.jwt.secret!,
   ) as Pick<IUser, "id" | "email" | "name" | "permissions">;
 
   const payload = {

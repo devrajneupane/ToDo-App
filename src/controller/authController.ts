@@ -2,7 +2,6 @@ import { Response, Request } from "express";
 import { sign, verify } from "jsonwebtoken";
 import HttpStatusCodes from "http-status-codes";
 
-import config from "../config";
 import loggerWithNameSpace from "../utils/logger";
 import * as AuthService from "../service/authService";
 
