@@ -4,6 +4,8 @@ import { Options } from "express-rate-limit";
 
 import { ALLOWED_ORIGINS } from "./constant/constants";
 
+dotenv.config({ path: __dirname + "/../.env" });
+
 dotenv.config();
 
 export const env = {
@@ -12,6 +14,14 @@ export const env = {
     secret: process.env.JWT_SECRET,
     accessTokenExpiryMS: 30000,
     refreshTokenExpiryMS: 300000,
+  },
+  database: {
+    client: process.env.DB_CLIENT,
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    name: process.env.DB_NAME,
+    port: process.env.DB_PORT || 5432,
   },
 };
 
