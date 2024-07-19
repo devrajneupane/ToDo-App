@@ -10,8 +10,10 @@ export interface IUser {
   permissions: ROLE[];
 }
 
-export interface GetUserQuery {
+export interface IGetUserQuery {
   q?: string;
+  page?: number;
+  size?: number;
 }
 
 export interface Params {

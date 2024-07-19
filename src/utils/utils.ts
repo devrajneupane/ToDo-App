@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import crypto, { UUID } from "crypto";
 
-import { sign, verify } from "jsonwebtoken";
+import { sign } from "jsonwebtoken";
 
 import { env } from "../config";
 import { IUser } from "../interface/User";
