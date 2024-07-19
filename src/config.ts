@@ -12,8 +12,8 @@ export const env = {
   port: process.env.PORT,
   jwt: {
     secret: process.env.JWT_SECRET,
-    accessTokenExpiryMS: 30000,
-    refreshTokenExpiryMS: 300000,
+    accessTokenExpiryMS: +process.env.ACCESS_TOKEN_EXPIRY_MS!,
+    refreshTokenExpiryMS: +process.env.REFRESH_TOKEN_EXPIRY_MS!,
   },
   database: {
     client: process.env.DB_CLIENT,

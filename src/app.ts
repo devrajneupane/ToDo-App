@@ -2,7 +2,6 @@ import cors from "cors";
 import helmet from "helmet";
 import express from "express";
 import rateLimiter from "express-rate-limit";
-import HttpStatusCodes from "http-status-codes";
 
 import router from "./routes/";
 import loggerWithNameSpace from "./utils/logger";
