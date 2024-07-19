@@ -1,22 +1,21 @@
 import { Router } from "express";
 
 import {
-  getTasks,
-  getTaskById,
-  updateTask,
-  deleteTask,
-  createTask,
-} from "../controller/taskController";
-import {
   createTaskBodySchema,
   taskIdParamSchema,
   updateTaskBodySchema,
 } from "../schema/task";
+import {
+  createTask,
+  deleteTask,
+  getTaskById,
+  getTasks,
+  updateTask,
+} from "../controller/taskController";
 import { ROLE } from "../enums/Role";
-import { updateUserBodySchema } from "../schema/user";
+import { requestHandler } from "../utils/requestWrapper";
 import { authenticate, authorize } from "../middleware/auth";
 import { validateReqBody, validateReqParams } from "../middleware/validator";
-import { requestHandler } from "../utils/requestWrapper";
 
 const router = Router();
 
@@ -36,6 +35,7 @@ router.get(
     getTaskById,
   ]),
 );
+
 router.post(
   "/",
   requestHandler([
@@ -45,6 +45,7 @@ router.post(
     createTask,
   ]),
 );
+
 router.patch(
   "/:id",
   requestHandler([
@@ -55,6 +56,7 @@ router.patch(
     updateTask,
   ]),
 );
+
 router.delete(
   "/:id",
   requestHandler([

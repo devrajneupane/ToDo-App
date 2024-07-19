@@ -5,14 +5,16 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  getUsers,
 } from "../controller/userController";
 import {
   createUserBodySchema,
   updateUserBodySchema,
-  userIdQuerySchema,
+  userReqParamSchema,
+  userReqQuerySchema,
 } from "../schema/user";
 import { ROLE } from "../enums/Role";
-import { validateReqBody, validateReqQuery } from "../middleware/validator";
+import { validateReqBody, validateReqParams, validateReqQuery } from "../middleware/validator";
 import { authenticate, authorize } from "../middleware/auth";
 import { requestHandler } from "../utils/requestWrapper";
 
@@ -23,7 +25,17 @@ router.get(
   requestHandler([
     authenticate,
     authorize(ROLE.ADMIN),
-    validateReqQuery(userIdQuerySchema),
+    validateReqQuery(userReqQuerySchema),
+    getUsers,
+  ]),
+);
+
+router.get(
+  "/:id",
+  requestHandler([
+    authenticate,
+    authorize(ROLE.ADMIN),
+    validateReqParams(userReqParamSchema),
     getUserInfo,
   ]),
 );
@@ -43,7 +55,7 @@ router.patch(
   requestHandler([
     authenticate,
     authorize(ROLE.ADMIN),
-    validateReqQuery(userIdQuerySchema),
+    validateReqQuery(userReqParamSchema),
     validateReqBody(updateUserBodySchema),
     updateUser,
   ]),
@@ -54,7 +66,7 @@ router.delete(
   requestHandler([
     authenticate,
     authorize(ROLE.ADMIN),
-    validateReqQuery(userIdQuerySchema),
+    validateReqQuery(userReqParamSchema),
     deleteUser,
   ]),
 );

@@ -11,7 +11,7 @@ const router = express();
 const logger = loggerWithNameSpace(__filename);
 
 router.get("/", (req, res) => {
-  logger.info("Api is running");
+  logger.info("App is running");
   res.status(StatusCodes.OK).send({
     message: "App is running",
   });
