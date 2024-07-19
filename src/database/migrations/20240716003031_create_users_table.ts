@@ -12,7 +12,6 @@ const TABLE_NAME = "users";
 export async function up(knex: Knex): Promise<void> {
   return knex.schema.createTable(TABLE_NAME, (table) => {
     table.uuid("id", { primaryKey: true, useBinaryUuid: true });
-    // .defaultTo(knex.fn.uuid());
     table.string("name", 100).notNullable();
     table.string("email", 100).notNullable().unique();
     table.string("password", 100).notNullable();

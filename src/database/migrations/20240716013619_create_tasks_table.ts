@@ -11,9 +11,9 @@ const TABLE_NAME = "tasks";
  */
 export async function up(knex: Knex): Promise<void> {
   return knex.schema.createTable(TABLE_NAME, (table) => {
-    table.uuid("taskId", { primaryKey: true, useBinaryUuid: true });
+    table.uuid("task_id", { primaryKey: true, useBinaryUuid: true });
     table
-      .uuid("userId", { useBinaryUuid: true })
+      .uuid("user_id", { useBinaryUuid: true })
       .references("id")
       .inTable("users")
       .notNullable();
