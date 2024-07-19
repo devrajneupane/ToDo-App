@@ -2,7 +2,7 @@ import { UUID } from "crypto";
 
 import * as TaskModel from "../model/taskModel";
 import * as userModel from "../model/userModel";
-import { ITask, ITodo } from "../interface/Task";
+import { ITask } from "../interface/Task";
 import { IServiceResponse } from "../interface/ServiceResponse";
 
 /**
@@ -11,9 +11,9 @@ import { IServiceResponse } from "../interface/ServiceResponse";
  * @param userId User ID
  * @returns Service Response
  */
-export function getTasks(userId: UUID): IServiceResponse {
-  const user = userModel.getUserInfo(userId);
-  const data: ITodo[] = TaskModel.getTasks(user.id, user.permissions);
+export async function getTasks(userId: UUID): Promise<IServiceResponse> {
+  const user = await userModel.UserModel.getUserInfo(userId);
+  const data = await TaskModel.TaskModel.getTasks(user.id, user.permissions);
 
   return {
     message: "Tasks retrieved successfully",
@@ -27,9 +27,16 @@ export function getTasks(userId: UUID): IServiceResponse {
  * @param taskId Task id
  * @returns Service Response
  */
-export function getTaskById(taskId: UUID, userId: UUID): IServiceResponse {
-  const user = userModel.getUserInfo(userId);
-  const data = TaskModel.getTaskById(taskId, userId, user.permissions);
+export async function getTaskById(
+  taskId: UUID,
+  userId: UUID,
+): Promise<IServiceResponse> {
+  const user = await userModel.UserModel.getUserInfo(userId);
+  const data = await TaskModel.TaskModel.getTaskById(
+    taskId,
+    userId,
+    user.permissions,
+  );
 
   return {
     message: "Task retrieved successfully",
@@ -43,8 +50,11 @@ export function getTaskById(taskId: UUID, userId: UUID): IServiceResponse {
  * @param task Task object
  * @returns Service Response
  */
-export function createTask(userId: UUID, task: ITask): IServiceResponse {
-  const data = TaskModel.createTask(userId, task);
+export async function createTask(
+  userId: UUID,
+  task: ITask,
+): Promise<IServiceResponse> {
+  const data = await TaskModel.TaskModel.createTask(userId, task);
 
   return {
     message: "Task created successfully",
@@ -59,12 +69,12 @@ export function createTask(userId: UUID, task: ITask): IServiceResponse {
  * @param task Task object
  * @returns Service Response
  */
-export function updateTask(
+export async function updateTask(
   taskId: UUID,
   userId: UUID,
   task: ITask,
-): IServiceResponse {
-  const data = TaskModel.updateTask(taskId, userId, task);
+): Promise<IServiceResponse> {
+  const data = await TaskModel.TaskModel.updateTask(taskId, userId, task);
 
   return {
     message: "Task updated successfully",
@@ -78,8 +88,8 @@ export function updateTask(
  * @param id Task id
  * @returns Service Response
  */
-export function deleteTask(taskId: UUID, userId: UUID): IServiceResponse {
-  const data = TaskModel.deleteTask(taskId, userId);
+export async function deleteTask(taskId: UUID, userId: UUID): Promise<IServiceResponse> {
+  const data = await TaskModel.TaskModel.deleteTask(taskId, userId);
 
   return {
     message: "Task deleted successfully",

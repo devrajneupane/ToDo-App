@@ -2,9 +2,8 @@ import { UUID } from "crypto";
 
 import bcrypt from "bcrypt";
 
-import { getUUID } from "../utils/utils";
+import { IGetUserQuery, IUser } from "../interface/User";
 import * as UserModel from "../model/userModel";
-import { GetUserQuery, IUser } from "../interface/User";
 
 /**
  * Get user info
@@ -13,7 +12,7 @@ import { GetUserQuery, IUser } from "../interface/User";
  * @returns User object
  */
 export async function getUserInfo(id: UUID) {
-  const data = await UserModel.getUserInfo(id);
+  const data = await UserModel.UserModel.getUserInfo(id);
 
   return {
     message: "User info retrieved successfully",
@@ -22,14 +21,30 @@ export async function getUserInfo(id: UUID) {
 }
 
 /**
+ * Get all users
+ *
+ * @param query Query parameters
+ * @returns List of users
+ */
+export async function getUsers(query: IGetUserQuery) {
+  const data = await UserModel.UserModel.getUsers(query);
+
+  return {
+    message: "All users retrieved successfully",
+    data,
+  };
+}
+
+/**
  * Create user
  *
  * @param user User data
+ * @returns Newly created user object
  */
 export async function createUser(user: IUser) {
   const password = await bcrypt.hash(user.password, 10);
 
-  const data = await UserModel.createUser({
+  const data = await UserModel.UserModel.createUser({
     ...user,
     password: password,
   });
@@ -47,7 +62,7 @@ export async function createUser(user: IUser) {
  * @param userData User data
  * @returns User object
  */
-export async function updateUser(id: UUID, userData: IUser) {
+export async function updateUser(id: UUID, userData: Partial<IUser>) {
   const { name, email, password } = userData;
   const newUserData: Partial<IUser> = {};
 
@@ -55,7 +70,7 @@ export async function updateUser(id: UUID, userData: IUser) {
   if (email) newUserData.email = email;
   if (password) newUserData.password = await bcrypt.hash(password, 10);
 
-  const data = await UserModel.updateUser(id, newUserData);
+  const data = await UserModel.UserModel.updateUser(id, newUserData);
 
   return {
     message: "User updated successfully",
@@ -70,7 +85,7 @@ export async function updateUser(id: UUID, userData: IUser) {
  * @returns User object
  */
 export async function deleteUser(id: UUID) {
-  const data = await UserModel.deleteUser(id);
+  const data = await UserModel.UserModel.deleteUser(id);
 
   return {
     message: "User deleted successfully",
@@ -85,7 +100,7 @@ export async function deleteUser(id: UUID) {
  * @returns User object
  */
 export function getUserByEmail(email: string) {
-  const data = UserModel.getUserByEmail(email);
+  const data = UserModel.UserModel.getUserByEmail(email);
 
   return data;
 }

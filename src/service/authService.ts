@@ -1,25 +1,20 @@
 import bcrypt from "bcrypt";
-import { sign, verify } from "jsonwebtoken";
+import { verify } from "jsonwebtoken";
 
 import { env } from "../config";
 import { IUser } from "../interface/User";
 import { signPayload } from "../utils/utils";
 import { getUserByEmail } from "./userService";
+import { UnauthorizedError } from "../error/UnauthorizedError";
 
 /**
  * Login user
  *
- * @param body
+ * @param body login details
  * @returns accessToken and refreshToken
  */
 export async function login(body: Pick<IUser, "email" | "password">) {
-  const existingUser = getUserByEmail(body.email);
-
-  if (!existingUser) {
-    return {
-      error: "Invalid email or password",
-    };
-  }
+  const existingUser = await getUserByEmail(body.email);
 
   const isValidPassword = await bcrypt.compare(
     body.password,
@@ -27,9 +22,7 @@ export async function login(body: Pick<IUser, "email" | "password">) {
   );
 
   if (!isValidPassword) {
-    return {
-      error: "Invalid email or password",
-    };
+    throw new UnauthorizedError("Invalid email or password");
   }
 
   const payload = {
