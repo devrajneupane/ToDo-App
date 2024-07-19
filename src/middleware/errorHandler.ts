@@ -1,12 +1,9 @@
-import { ValidationError } from "joi";
 import { StatusCodes } from "http-status-codes";
 import { Response, NextFunction } from "express";
 
 import { IRequest } from "../interface/auth";
 import { BaseError } from "../error/BaseError";
 import loggerWithNameSpace from "../utils/logger";
-import { BadRequestError } from "../error/BadRequestError";
-import { UnauthenticatedError } from "../error/UnauthenticatedErrors";
 
 const logger = loggerWithNameSpace(__filename);
 
