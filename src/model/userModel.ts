@@ -1,143 +1,146 @@
-import * as path from "path";
 import { UUID } from "crypto";
 
-import { StatusCodes } from "http-status-codes";
-
+import { BaseModel } from "./Base";
 import { ROLE } from "../enums/Role";
+import { getUUID } from "../utils/utils";
 import { NotFound } from "../error/NotFound";
-import { BaseError } from "../error/BaseError";
-import loggerWithNameSpace from "../utils/logger";
-import { GetUserQuery, IUser } from "../interface/User";
-import { getUUID, readJsonFile, writeJsonFile } from "../utils/utils";
+import { IGetUserQuery, IUser } from "../interface/User";
+import { ConflictError } from "../error/ConflictError";
 
-const logger = loggerWithNameSpace(__filename);
-const usersFilePath = path.resolve(__dirname, "../../data/users.json");
-
-let users: IUser[] = [];
-
-readJsonFile(usersFilePath)
-  .then((jsonData) => {
-    users = jsonData;
-  })
-  .catch((error) => {
-    throw new Error("Error reading JSON file");
-  });
+const TABLE_NAME = "users"
 
 /**
- * Get user info
- *
- * @param id User ID
- * @returns User object if found
+ * UserModel class represents operations related to user management
+ * Extends BaseModel for common functionalities
  */
-export function getUserInfo(id: UUID): Omit<IUser, "password"> {
-  const user = users.find(({ id: userId }) => userId === id);
-  if (!user) {
-    throw new NotFound(`User with id ${id} not found`);
+export class UserModel extends BaseModel {
+  /**
+   * Retrieves a list of users based on filter criteria
+   *
+   * @param filter Filter criteria including search query, page, and size
+   * @returns users
+   */
+  static async getUsers(filter: IGetUserQuery) {
+    const { q } = filter;
+
+    const users = this.connection<IUser>(TABLE_NAME)
+      .select("id", "name", "email", "permissions")
+      .limit(filter.size || 10)
+      .offset((filter.page || 1 - 1) * (filter.size || 10));
+
+    if (q) {
+      users.whereLike("name", `%${q}%`);
+    }
+
+    return users;
   }
 
-  const { password, ...userInfo } = user;
+  /**
+   * Retrieves user information by user ID
+   *
+   * @param  id User ID.
+   * @returns  User object excluding password if found
+   * @throws NotFound error if user with provided ID does not exist
+   */
+  static async getUserInfo(id: UUID): Promise<Omit<IUser, "password">> {
+    const user = await this.connection<IUser>(TABLE_NAME).where({ id }).first();
+    if (!user) {
+      throw new NotFound(`User with id ${id} not found`);
+    }
 
-  return userInfo;
-}
+    const { password, ...userInfo } = user;
 
-/**
- * Get all users
- *
- * @param user User data
- * @returns User object if found or null
- */
-export async function createUser(
-  user: Omit<IUser, "id">,
-): Promise<Omit<IUser, "password">> {
-  logger.info("Creating a User");
-
-  const userExists = users.find(({ email }) => email === user.email);
-  if (userExists) {
-    throw new BaseError("User with same email already exists", StatusCodes.CONFLICT);
+    return userInfo;
   }
 
-  const userData = { id: getUUID(), ...user, permissions: [ROLE.USER] };
+  /**
+   * Creates a new user
+   *
+   * @param user User data excluding ID
+   * @returns Newly created user object excluding password
+   * @throws Error if user with the same email already exists
+   */
+  static async createUser(
+    user: Omit<IUser, "id">,
+  ): Promise<Omit<IUser, "password">> {
+    const userToCreate = {
+      id: getUUID(),
+      ...user,
+      permissions: [ROLE.USER],
+    };
 
-  users.push(userData);
+    const query = await this.queryBuilder()
+      .table(TABLE_NAME)
+      .where({ email: user.email });
 
-  writeJsonFile(usersFilePath, users)
-    .then(() => {
-      logger.info("JSON file has been written successfully!");
-    })
-    .catch((error) => {
-      logger.error(error.message);
-    });
-  const { password, ...userInfo } = userData;
-  return userInfo;
-}
+    if (query.length !== 0) {
+      throw new ConflictError("User with same email already exists");
+    }
 
-/**
- * Update user
- *
- * @param id User ID
- * @param userData User data
- * @returns User object if found or null
- */
-export function updateUser(
-  id: UUID,
-  userData: Partial<IUser>,
-): Omit<IUser, "password"> {
-  const index = users.findIndex(({ id: userId }) => userId === id);
-  if (index === -1) {
-    throw new NotFound(`User with id ${id} does not exists`);
+    await this.queryBuilder().insert(userToCreate).table(TABLE_NAME);
+
+    const { password, ...userInfo } = userToCreate;
+    return userInfo;
   }
 
-  users[index] = { ...users[index], ...userData };
+  /**
+   * Updates an existing user
+   *
+   * @param id User ID
+   * @param userData Partial user data to update
+   * @returns Updated user object excluding password if found
+   * @throws Error if user with provided ID does not exist
+   */
+  static async updateUser(
+    id: UUID,
+    userData: Partial<IUser>,
+  ): Promise<Omit<IUser, "password">> {
+    const query = await this.queryBuilder().table(TABLE_NAME).where({ id });
+    if (query.length === 0) {
+      throw new NotFound(`User with id ${id} does not exists`);
+    }
 
-  writeJsonFile(usersFilePath, users)
-    .then(() => {
-      logger.info("JSON file has been written successfully!");
-    })
-    .catch((error) => {
-      logger.error(error.message);
-    });
+    await this.queryBuilder().update(userData).table(TABLE_NAME).where({ id });
 
-  const { password, ...userInfo } = users[index];
-  return userInfo;
-}
+    const updatedUser = await this.connection<IUser>(TABLE_NAME)
+      .where({ id })
+      .first();
 
-/**
- * Delete user
- *
- * @param id User ID
- * @returns User object if found or null
- */
-export function deleteUser(id: UUID): Omit<IUser, "password"> {
-  const index = users.findIndex(({ id: userId }) => userId === id);
-  if (index === -1) {
-    throw new NotFound(`User with id ${id} does not exists`);
+    const { password, ...userInfo } = updatedUser!;
+    return userInfo;
   }
 
-  const userData = users[index];
-  users.splice(index, 1);
+  /**
+   * Deletes a user by ID
+   *
+   * @param id User ID
+   * @returns Deleted user object excluding password if found
+   * @throws Error if user with provided ID does not exist
+   */
+  static async deleteUser(id: UUID): Promise<Omit<IUser, "password">> {
+    const user = await this.connection<IUser>(TABLE_NAME).where({ id }).first();
+    if (!user) {
+      throw new NotFound(`User with id ${id} does not exists`);
+    }
 
-  writeJsonFile(usersFilePath, users)
-    .then(() => {
-      logger.info("JSON file has been written successfully!");
-    })
-    .catch((error) => {
-      logger.error(error.message);
-    });
+    await this.queryBuilder().del().table(TABLE_NAME).where({ id });
 
-  const { password, ...userInfo } = userData;
-  return userInfo;
-}
-
-/**
- * Get user by email
- *
- * @param email User email
- * @returns User object if found or null
- */
-export function getUserByEmail(email: string): IUser {
-  const user = users.find(({ email: userEmail }) => userEmail === email);
-  if (!user) {
-    throw new Error(`User with email ${email} does not exists`);
+    const { password, ...userInfo } = user!;
+    return userInfo;
   }
-  return user;
+
+  /**
+   * Retrieves user by email
+   *
+   * @param email User email
+   * @returns User object if found
+   * @throws Error if user with provided email does not exist
+   */
+  static async getUserByEmail(email: string): Promise<IUser> {
+    const user = await this.connection<IUser>(TABLE_NAME).where({ email }).first();
+    if (!user) {
+      throw new NotFound(`User with email ${email} does not exists`);
+    }
+    return user;
+  }
 }

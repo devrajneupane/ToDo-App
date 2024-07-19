@@ -1,136 +1,121 @@
-import * as path from "path";
 import { UUID } from "crypto";
 
+import { BaseModel } from "./Base";
 import { ROLE } from "../enums/Role";
+import { getUUID } from "../utils/utils";
 import { NotFound } from "../error/NotFound";
 import { ITask, ITodo } from "../interface/Task";
 import { TASK_STATUS } from "../enums/TaskStatus";
-import loggerWithNameSpace from "../utils/logger";
 import { UnauthorizedError } from "../error/UnauthorizedError";
-import { getUUID, readJsonFile, writeJsonFile } from "../utils/utils";
 
-const logger = loggerWithNameSpace(__filename);
+const TABLE_NAME = "tasks";
 
-const filePath = path.resolve(__dirname, "../../data/tasks.json");
-let tasks: ITodo[] = [];
+export class TaskModel extends BaseModel {
+  /**
+   * Get all tasks
+   *
+   * @param userId User ID
+   * @param permissions User permissions
+   * @returns Array of `ITodo` objects
+   */
+  static async getTasks(userId: UUID, permissions: ROLE[]): Promise<ITodo[]> {
+    if (permissions.includes(ROLE.ADMIN))
+      return await this.connection<ITodo>(TABLE_NAME).select();
 
-readJsonFile(filePath)
-  .then((jsonData) => {
-    tasks = jsonData;
-  })
-  .catch((err) => {
-    logger.error("Error reading JSON file:", err);
-  });
+    const tasks = await this.connection<ITodo>(TABLE_NAME).where({ userId });
 
-/**
- * Get all tasks
- *
- * @param userId User ID
- * @param permissions User permissions
- * @returns Array of `ITodo` objects
- */
-export function getTasks(userId: UUID, permissions: ROLE[]): ITodo[] {
-  if (permissions.includes(ROLE.ADMIN)) return tasks;
-
-  const result = tasks.filter(({ userId: id }) => id === userId);
-  return result;
-}
-
-/**
- * Get task by id
- *
- * @param id Task id
- * @returns Task object if found or null
- */
-export function getTaskById(
-  taskId: UUID,
-  userId: UUID,
-  permissions: ROLE[],
-): ITodo {
-  const task = tasks.find(({ taskId: id }) => id === taskId);
-
-  if (!task) throw new NotFound(`Task ${taskId} does not exists`);
-  if (!permissions.includes(ROLE.ADMIN) && task.userId !== userId) {
-    throw new UnauthorizedError("Can't access task");
+    return tasks;
   }
 
-  return task;
-}
+  /**
+   * Get task by id
+   *
+   * @param id Task id
+   * @returns Task object if found or null
+   */
+  static async getTaskById(
+    taskId: UUID,
+    userId: UUID,
+    permissions: ROLE[],
+  ): Promise<ITodo> {
+    const task = await this.connection<ITodo>(TABLE_NAME)
+      .where({ taskId })
+      .first();
 
-/**
- * Create a new task
- *
- * @param task Task object
- * @returns Task object
- */
-export function createTask(userId: UUID, task: ITask): ITodo {
-  task.status = task.status || TASK_STATUS.NOTSTARTED;
-  const newTask: ITodo = {
-    taskId: getUUID(),
-    userId,
-    ...task,
-  };
-  tasks.push(newTask);
+    if (!task) throw new NotFound(`Task ${taskId} does not exists`);
+    if (!permissions.includes(ROLE.ADMIN) && task.userId !== userId) {
+      throw new UnauthorizedError("Can't access task");
+    }
 
-  writeJsonFile(filePath, tasks)
-    .then(() => {
-      logger.info("JSON file has been written successfully!");
-    })
-    .catch((error) => {
-      logger.error(error.message);
-    });
+    return task;
+  }
 
-  return newTask;
-}
+  /**
+   * Create a new task
+   *
+   * @param task Task object
+   * @returns Task object
+   */
+  static async createTask(userId: UUID, task: ITask): Promise<ITodo> {
+    task.status = task.status || TASK_STATUS.NOTSTARTED;
+    const newTask: ITodo = {
+      taskId: getUUID(),
+      userId,
+      ...task,
+    };
+    await this.queryBuilder().insert(newTask).table(TABLE_NAME);
 
-/**
- * Update task
- *
- * @param taskId Task id
- * @param task Task object
- * @returns Task object if found or null
- */
-export function updateTask(taskId: UUID, userId: UUID, task: ITask): ITodo {
-  const index = tasks.findIndex((task) => task.taskId === taskId);
+    return newTask;
+  }
 
-  if (index === -1 || tasks[index].userId !== userId)
-    throw new UnauthorizedError("Can't update task");
+  /**
+   * Update task
+   *
+   * @param taskId Task id
+   * @param task Task object
+   * @returns Task object if found or null
+   */
+  static async updateTask(
+    taskId: UUID,
+    userId: UUID,
+    task: ITask,
+  ): Promise<ITodo> {
+    const query = await this.connection<ITodo>(TABLE_NAME)
+      .where({ taskId })
+      .first();
 
-  tasks[index] = { ...tasks[index], ...task };
+    if (!query) throw new NotFound(`Task with id ${taskId} does not exists`);
 
-  writeJsonFile(filePath, tasks)
-    .then(() => {
-      logger.info("JSON file has been written successfully!");
-    })
-    .catch((error) => {
-      logger.error(error.message);
-    });
+    if (query.userId !== userId)
+      throw new UnauthorizedError("Can't update task");
 
-  return tasks[index];
-}
+    await this.queryBuilder().update(task).table(TABLE_NAME).where({ taskId });
 
-/**
- * Delete task
- *
- * @param id Task id
- * @returns Task object if found or null
- */
-export function deleteTask(taskId: UUID, userId: UUID): ITodo {
-  const index = tasks.findIndex((task) => task.taskId === taskId);
-  const task = tasks[index];
+    const updatedTask = await this.connection<ITodo>(TABLE_NAME)
+      .where({ taskId })
+      .first();
 
-  if (index === -1) throw new NotFound(`Task ${taskId} does not exists`);
-  if (task.userId !== userId) throw new UnauthorizedError("Can't delete task");
+    return updatedTask!;
+  }
 
-  tasks.splice(index, 1);
+  /**
+   * Delete task
+   *
+   * @param id Task id
+   * @returns Task object if found or null
+   */
+  static async deleteTask(taskId: UUID, userId: UUID): Promise<ITodo> {
+    const task = await this.connection<ITodo>(TABLE_NAME)
+      .where({ taskId })
+      .first();
 
-  writeJsonFile(filePath, tasks)
-    .then(() => {
-      logger.info("JSON file has been written successfully!");
-    })
-    .catch((error) => {
-      logger.error(error.message);
-    });
+    if (!task) throw new NotFound(`Task with id ${taskId} does not exists`);
 
-  return task;
+    if (task.userId !== userId)
+      throw new UnauthorizedError("Can't delete task");
+
+    await this.queryBuilder().del().table(TABLE_NAME).where({ taskId });
+
+    return task;
+  }
 }
