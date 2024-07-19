@@ -4,10 +4,9 @@ import { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
 import { IRequest } from "../interface/auth";
-import { NotFound } from "../error/NotFound";
 import loggerWithNameSpace from "../utils/logger";
 import * as UserService from "../service/userService";
-import { GetUserQuery, IUser, Params } from "../interface/User";
+import { IGetUserQuery } from "../interface/User";
 
 const logger = loggerWithNameSpace(__filename);
 
@@ -18,11 +17,29 @@ const logger = loggerWithNameSpace(__filename);
  * @param res Response Object
  */
 export async function getUserInfo(req: IRequest, res: Response) {
-  const id = req.query.id ? (req.query.id as UUID) : (req.user!.id as UUID);
+  // const id = req.query.id ? (req.query.id as UUID) : (req.user!.id as UUID);
+  const id = req.params.id as UUID;
   logger.info(`Getting information for user ${id}`);
 
   const serviceData = await UserService.getUserInfo(id);
   logger.info(`Retrived information for user ${id}`);
+
+  res.status(StatusCodes.OK).json(serviceData);
+}
+
+/**
+ * Get all users
+ *
+ * @param req Request Object with query parameters
+ * @param res Response Object
+ * @returns List of users
+ */
+export async function getUsers(req: IRequest, res: Response) {
+  const query = req.query as IGetUserQuery;
+  logger.info(`Getting all users`);
+
+  const serviceData = await UserService.getUsers(query);
+  logger.info(`Retrived all users`);
 
   res.status(StatusCodes.OK).json(serviceData);
 }
