@@ -2,7 +2,7 @@ import { Knex } from "knex";
 
 import { env } from "./config";
 
-const baseKnexConfig: Knex.Config = {
+export const baseKnexConfig: Knex.Config = {
   client: env.database.client,
   connection: {
     host: env.database.host,
