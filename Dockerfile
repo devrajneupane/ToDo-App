@@ -1,6 +1,9 @@
 # Stage 1: Build stage
 FROM node:20-alpine AS build
 
+# Set timezone for logs
+ENV TZ=Asia/Kathmandu
+
 # Set the working directory inside the container
 WORKDIR /app
 
