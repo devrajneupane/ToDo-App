@@ -76,11 +76,16 @@ export const updateUserBodySchema = Joi.object({
   stripUnknown: true,
 });
 
-export const userIdQuerySchema = Joi.object({
-  id: Joi.string()
-    .guid()
-    .required()
-    .messages({
-      "string.guid": "ID must be a valid guid",
-    }),
+export const userReqQuerySchema = Joi.object({
+  q: Joi.string().optional().messages({
+    "string.guid": "ID must be a valid guid",
+  }),
+  page: Joi.number().optional(),
+  size: Joi.number().optional(),
+}).options({ stripUnknown: true });
+
+export const userReqParamSchema = Joi.object({
+  id: Joi.string().guid().required().messages({
+    "string.guid": "ID must be a valid guid",
+  }),
 }).options({ stripUnknown: true });
