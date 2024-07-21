@@ -1,6 +1,9 @@
 # Stage 1: Build stage
 FROM node:20-alpine AS build
 
+# Set timezone for logs
+ENV TZ=Asia/Kathmandu
+
 # Set the working directory inside the container
 WORKDIR /app
 
@@ -23,13 +26,11 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy .env, package.json and package-lock.json
-COPY --from=build .env package*.json ./
-
-# Copy .env and tasks.json
-COPY --from=build src/tasks.json  ./dist/
+COPY --from=build /app/.env /app/package*.json ./
 
 # Copy built files and necessary dependencies from the build stage
-COPY --from=build /app/dist ./dist/
+COPY --from=build /app/data  ./data
+COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules ./node_modules
 
 # Expose the port the app runs on

@@ -1,44 +1,47 @@
+import { UUID } from "crypto";
+
 import * as TaskModel from "../model/taskModel";
-import { ITask, ITodo } from "../interfaces/Task";
-import { IServiceResponse } from "../interfaces/ServiceResponse";
+import * as userModel from "../model/userModel";
+import { ITask } from "../interface/Task";
+import { IServiceResponse } from "../interface/ServiceResponse";
 
 /**
  * Get all tasks
  *
+ * @param userId User ID
  * @returns Service Response
  */
-export function getTasks(): IServiceResponse {
-  const data: ITodo[] = TaskModel.getTasks();
+export async function getTasks(userId: UUID): Promise<IServiceResponse> {
+  const user = await userModel.UserModel.getUserInfo(userId);
+  const data = await TaskModel.TaskModel.getTasks(user.id, user.permissions);
 
-  if (data.length > 0) {
-    return {
-      data,
-    };
-  } else {
-    return {
-      message: "No tasks found",
-    };
-  }
+  return {
+    message: "Tasks retrieved successfully",
+    data,
+  };
 }
 
 /**
  * Get task by id
  *
- * @param id Task id
+ * @param taskId Task id
  * @returns Service Response
  */
-export function getTaskById(id: string): IServiceResponse {
-  const data = TaskModel.getTaskById(id);
+export async function getTaskById(
+  taskId: UUID,
+  userId: UUID,
+): Promise<IServiceResponse> {
+  const user = await userModel.UserModel.getUserInfo(userId);
+  const data = await TaskModel.TaskModel.getTaskById(
+    taskId,
+    userId,
+    user.permissions,
+  );
 
-  if (data) {
-    return {
-      data,
-    };
-  } else {
-    return {
-      error: `Task with id ${id} not found`,
-    };
-  }
+  return {
+    message: "Task retrieved successfully",
+    data,
+  };
 }
 
 /**
@@ -47,41 +50,36 @@ export function getTaskById(id: string): IServiceResponse {
  * @param task Task object
  * @returns Service Response
  */
-export function createTask(task: ITask): IServiceResponse {
-  const data = TaskModel.createTask(task);
+export async function createTask(
+  userId: UUID,
+  task: ITask,
+): Promise<IServiceResponse> {
+  const data = await TaskModel.TaskModel.createTask(userId, task);
 
-  if (data) {
-    return {
-      message: "Task created successfully",
-      data,
-    };
-  } else {
-    return {
-      error: "Failed to create Task",
-    };
-  }
+  return {
+    message: "Task created successfully",
+    data,
+  };
 }
 
 /**
  * Update a task
  *
- * @param id Task id
+ * @param taskId Task id
  * @param task Task object
  * @returns Service Response
  */
-export function updateTask(id: string, task: ITask): IServiceResponse {
-  const data = TaskModel.updateTask(id, task);
+export async function updateTask(
+  taskId: UUID,
+  userId: UUID,
+  task: ITask,
+): Promise<IServiceResponse> {
+  const data = await TaskModel.TaskModel.updateTask(taskId, userId, task);
 
-  if (data) {
-    return {
-      message: "Task updated successfully",
-      data,
-    };
-  } else {
-    return {
-      error: `Task with id ${id} not found`,
-    };
-  }
+  return {
+    message: "Task updated successfully",
+    data,
+  };
 }
 
 /**
@@ -90,17 +88,11 @@ export function updateTask(id: string, task: ITask): IServiceResponse {
  * @param id Task id
  * @returns Service Response
  */
-export function deleteTask(id: string): IServiceResponse {
-  const data = TaskModel.deleteTask(id);
+export async function deleteTask(taskId: UUID, userId: UUID): Promise<IServiceResponse> {
+  const data = await TaskModel.TaskModel.deleteTask(taskId, userId);
 
-  if (data) {
-    return {
-      message: "Task deleted successfully",
-      data,
-    };
-  } else {
-    return {
-      error: `Task with id ${id} not found`,
-    };
-  }
+  return {
+    message: "Task deleted successfully",
+    data,
+  };
 }

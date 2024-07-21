@@ -1,3 +1,5 @@
+import { UUID } from "crypto";
+
 import { TASK_STATUS } from "../enums/TaskStatus";
 
 export interface ITask {
@@ -7,5 +9,6 @@ export interface ITask {
 }
 
 export interface ITodo extends ITask {
-  id: string;
+  taskId: string;
+  userId: UUID
 }

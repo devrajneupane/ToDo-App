@@ -1,7 +1,14 @@
-import { Request, Response } from "express";
+import { UUID } from "crypto";
 
-import { ITask } from "../interfaces/Task";
+import { Response } from "express";
+import { StatusCodes } from "http-status-codes";
+
+import { ITask } from "../interface/Task";
+import { IRequest } from "../interface/auth";
+import loggerWithNameSpace from "../utils/logger";
 import * as TaskService from "../service/taskService";
+
+const logger = loggerWithNameSpace(__filename);
 
 /**
  * Get all tasks
@@ -9,13 +16,14 @@ import * as TaskService from "../service/taskService";
  * @param req Request Object
  * @param res Response Object
  */
-export function getTasks(req: Request, res: Response) {
-  const serviceData = TaskService.getTasks();
-  if (serviceData.data) {
-    res.status(200).send(serviceData);
-  } else {
-    res.status(404).send(serviceData);
-  }
+export async function getTasks(req: IRequest, res: Response) {
+  const userId = req.user?.id as UUID;
+  logger.info(`Getting all tasks for user ${userId}`);
+
+  const serviceData = await TaskService.getTasks(userId);
+  logger.info(`Retrived all tasks for user ${userId}`);
+
+  res.status(StatusCodes.OK).json(serviceData);
 }
 
 /**
@@ -24,15 +32,15 @@ export function getTasks(req: Request, res: Response) {
  * @param req Request Object
  * @param res Response Object
  */
-export function getTaskById(req: Request, res: Response) {
-  const { id } = req.params;
-  const serviceData = TaskService.getTaskById(id);
+export async function getTaskById(req: IRequest, res: Response) {
+  const taskId = req.params?.id as UUID;
+  const userId = req.user?.id as UUID;
+  logger.info(`Getting task ${taskId} for user ${userId}`);
 
-  if (serviceData.data) {
-    res.status(200).send(serviceData);
-  } else {
-    res.status(404).send(serviceData);
-  }
+  const serviceData = await TaskService.getTaskById(taskId, userId);
+  logger.info(`Retrived task ${taskId} for user ${userId}`);
+
+  res.status(StatusCodes.OK).send(serviceData);
 }
 
 /**
@@ -41,23 +49,15 @@ export function getTaskById(req: Request, res: Response) {
  * @param req Request Object
  * @param res Response Object
  */
-export function createTask(req: Request, res: Response) {
+export async function createTask(req: IRequest, res: Response) {
+  const userId = req.user?.id as UUID;
   const body: ITask = req.body;
+  logger.info(`Creating new task for user ${userId}`);
 
-  if (Object.keys(body).length === 0) {
-    res.status(404).send({
-      error: "Task is missing",
-    });
-    return;
-  }
+  const serviceData = await TaskService.createTask(userId, body);
+  logger.info(`Task created successfully`);
 
-  const serviceData = TaskService.createTask(body);
-
-  if (serviceData.data) {
-    res.status(201).send(serviceData);
-  } else {
-    res.status(404).send(serviceData);
-  }
+  res.status(StatusCodes.CREATED).send(serviceData);
 }
 
 /**
@@ -66,16 +66,16 @@ export function createTask(req: Request, res: Response) {
  * @param req Request Object
  * @param res Response Object
  */
-export function updateTask(req: Request, res: Response) {
-  const { id } = req.params;
+export async function updateTask(req: IRequest, res: Response) {
+  const taskId = req.params?.id as UUID;
+  const userId = req.user?.id as UUID;
   const { body } = req;
-  const serviceData = TaskService.updateTask(id, body);
+  logger.info(`Updating task ${taskId}`);
 
-  if (serviceData.data) {
-    res.status(200).send(serviceData);
-  } else {
-    res.status(404).send(serviceData);
-  }
+  const serviceData = await TaskService.updateTask(taskId, userId, body);
+  logger.info(`Task ${taskId} updated successfully`);
+
+  res.status(StatusCodes.OK).send(serviceData);
 }
 
 /**
@@ -84,13 +84,13 @@ export function updateTask(req: Request, res: Response) {
  * @param req Request Object
  * @param res Response Object
  */
-export function deleteTask(req: Request, res: Response) {
-  const { id } = req.params;
-  const serviceData = TaskService.deleteTask(id);
+export async function deleteTask(req: IRequest, res: Response) {
+  const userId = req.user?.id as UUID;
+  const taskId = req.params?.id as UUID;
+  logger.info(`Deleting task ${taskId}`);
 
-  if (serviceData.data) {
-    res.status(200).send(serviceData);
-  } else {
-    res.status(404).send(serviceData);
-  }
+  const serviceData = await TaskService.deleteTask(taskId, userId);
+  logger.info(`Task ${taskId} deleted successfully`);
+
+  res.status(StatusCodes.OK).send(serviceData);
 }

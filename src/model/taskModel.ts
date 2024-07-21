@@ -1,108 +1,121 @@
-import * as path from "path";
+import { UUID } from "crypto";
 
-import { ITask, ITodo } from "../interfaces/Task";
+import { BaseModel } from "./Base";
+import { ROLE } from "../enums/Role";
+import { getUUID } from "../utils/utils";
+import { NotFound } from "../error/NotFound";
+import { ITask, ITodo } from "../interface/Task";
 import { TASK_STATUS } from "../enums/TaskStatus";
-import { readJsonFile, writeJsonFile } from "../utils/utils";
+import { UnauthorizedError } from "../error/UnauthorizedError";
 
-const filePath = path.resolve(__dirname, "../tasks.json");
-let tasks: ITodo[] = [];
+const TABLE_NAME = "tasks";
 
-readJsonFile(filePath)
-  .then((jsonData) => {
-    tasks = jsonData;
-  })
-  .catch((err) => {
-    console.error("Error reading JSON file:", err);
-  });
+export class TaskModel extends BaseModel {
+  /**
+   * Get all tasks
+   *
+   * @param userId User ID
+   * @param permissions User permissions
+   * @returns Array of `ITodo` objects
+   */
+  static async getTasks(userId: UUID, permissions: ROLE[]): Promise<ITodo[]> {
+    if (permissions.includes(ROLE.ADMIN))
+      return await this.connection<ITodo>(TABLE_NAME).select();
 
-/**
- * Get all tasks
- */
-export function getTasks(): ITodo[] {
-  return tasks;
-}
+    const tasks = await this.connection<ITodo>(TABLE_NAME).where({ userId });
 
-/**
- * Get task by id
- *
- * @param id Task id
- * @returns Task object if found or null
- */
-export function getTaskById(id: string): ITodo | null {
-  const task = tasks.find(({ id: userId }) => userId === id);
-  return !task ? null : task;
-}
+    return tasks;
+  }
 
-/**
- * Create a new task
- *
- * @param task Task object
- * @returns Task object
- */
-export function createTask(task: ITask): ITodo {
-  const newTask: ITodo = {
-    id: `${tasks.length + 1}`,
-    ...task,
-  };
-  tasks.push(newTask);
+  /**
+   * Get task by id
+   *
+   * @param id Task id
+   * @returns Task object if found or null
+   */
+  static async getTaskById(
+    taskId: UUID,
+    userId: UUID,
+    permissions: ROLE[],
+  ): Promise<ITodo> {
+    const task = await this.connection<ITodo>(TABLE_NAME)
+      .where({ taskId })
+      .first();
 
-  writeJsonFile(filePath, tasks)
-    .then(() => {
-      console.log("JSON file has been written successfully!");
-    })
-    .catch((err) => {
-      console.error("Error writing JSON file:", err);
-    });
+    if (!task) throw new NotFound(`Task ${taskId} does not exists`);
+    if (!permissions.includes(ROLE.ADMIN) && task.userId !== userId) {
+      throw new UnauthorizedError("Can't access task");
+    }
 
-  return newTask;
-}
+    return task;
+  }
 
-/**
- * Update task
- *
- * @param id Task id
- * @param task Task object
- * @returns Task object if found or null
- */
-export function updateTask(id: string, task: ITask): ITodo | null {
-  const index = tasks.findIndex((task) => task.id === id);
+  /**
+   * Create a new task
+   *
+   * @param task Task object
+   * @returns Task object
+   */
+  static async createTask(userId: UUID, task: ITask): Promise<ITodo> {
+    task.status = task.status || TASK_STATUS.NOTSTARTED;
+    const newTask: ITodo = {
+      taskId: getUUID(),
+      userId,
+      ...task,
+    };
+    await this.queryBuilder().insert(newTask).table(TABLE_NAME);
 
-  if (index === -1) return null;
+    return newTask;
+  }
 
-  tasks[index] = { ...tasks[index], ...task };
+  /**
+   * Update task
+   *
+   * @param taskId Task id
+   * @param task Task object
+   * @returns Task object if found or null
+   */
+  static async updateTask(
+    taskId: UUID,
+    userId: UUID,
+    task: ITask,
+  ): Promise<ITodo> {
+    const query = await this.connection<ITodo>(TABLE_NAME)
+      .where({ taskId })
+      .first();
 
-  writeJsonFile(filePath, tasks)
-    .then(() => {
-      console.log("JSON file has been written successfully!");
-    })
-    .catch((err) => {
-      console.error("Error writing JSON file:", err);
-    });
+    if (!query) throw new NotFound(`Task with id ${taskId} does not exists`);
 
-  return tasks[index];
-}
+    if (query.userId !== userId)
+      throw new UnauthorizedError("Can't update task");
 
-/**
- * Delete task
- *
- * @param id Task id
- * @returns Task object if found or null
- */
-export function deleteTask(id: string): ITodo | null {
-  const index = tasks.findIndex((task) => task.id === id);
+    await this.queryBuilder().update(task).table(TABLE_NAME).where({ taskId });
 
-  if (index === -1) return null;
-  const data = tasks[index];
+    const updatedTask = await this.connection<ITodo>(TABLE_NAME)
+      .where({ taskId })
+      .first();
 
-  tasks.splice(index, 1);
+    return updatedTask!;
+  }
 
-  writeJsonFile(filePath, tasks)
-    .then(() => {
-      console.log("JSON file has been written successfully!");
-    })
-    .catch((err) => {
-      console.error("Error writing JSON file:", err);
-    });
+  /**
+   * Delete task
+   *
+   * @param id Task id
+   * @returns Task object if found or null
+   */
+  static async deleteTask(taskId: UUID, userId: UUID): Promise<ITodo> {
+    const task = await this.connection<ITodo>(TABLE_NAME)
+      .where({ taskId })
+      .first();
 
-  return data;
+    if (!task) throw new NotFound(`Task with id ${taskId} does not exists`);
+
+    if (task.userId !== userId)
+      throw new UnauthorizedError("Can't delete task");
+
+    await this.queryBuilder().del().table(TABLE_NAME).where({ taskId });
+
+    return task;
+  }
 }

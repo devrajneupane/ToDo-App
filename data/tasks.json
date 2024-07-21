@@ -1,0 +1,37 @@
+[
+  {
+    "taskId": "10788508-817b-4177-8d5f-6ce86c3c8d3a",
+    "userId": "9da1e246-03a8-4272-be8e-1cf8f551c68f",
+    "title": "Revise 'Thus Spoke Zarathustra'",
+    "desc": "Review and edit draft of the philosophical novel.",
+    "status": "pending"
+  },
+  {
+    "taskId": "3e84d672-b852-491b-a53a-3288df05d989",
+    "userId": "9da1e246-03a8-4272-be8e-1cf8f551c68f",
+    "title": "Prepare Lecture on Eternal Recurrence",
+    "desc": "Create lecture notes and outline for upcoming lecture on eternal recurrence.",
+    "status": "not started"
+  },
+  {
+    "taskId": "bb4280f6-9b88-4609-8ce4-5aecb3f6f319",
+    "userId": "80b223de-a9c8-437d-b932-8f540452bb45",
+    "title": "Correspondence with Wagner",
+    "desc": "Exchange letters with Richard Wagner regarding philosophy and music.",
+    "status": "not started"
+  },
+  {
+    "taskId": "4cea8ac7-e6a5-4a0a-a4f8-d0ed28e3a06c",
+    "userId": "80b223de-a9c8-437d-b932-8f540452bb45",
+    "title": "Read Schopenhauer's 'The World as Will and Representation'",
+    "desc": "Study Schopenhauer's work to inform own philosophical reflections.",
+    "status": "not started"
+  },
+  {
+    "taskId": "c637e8c4-3d04-45cd-b7c3-36af97102299",
+    "userId": "80b223de-a9c8-437d-b932-8f540452bb45",
+    "title": "Write Chapter on 'Master-Slave Morality'",
+    "desc": "Develop ideas for the contrasting moralities of master and slave classes.",
+    "status": "pending"
+  }
+]

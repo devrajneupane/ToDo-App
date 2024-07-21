@@ -40,58 +40,168 @@ npm start
 
 The server will start on the port specified in your `.env` file.
 
-## Available Routes
+### Using docker
 
-### 1. Get All Tasks
+Docker can be used for both development and deployment purpose.
 
-  - **Route:** `/tasks`
-  - **Method:** `GET`
-  - **Description:** Retrieves all tasks.
-  - **Response Data:** A list of all tasks or a message if there is no task
+<details>
 
-### 2.  Get Task by ID
+<summary>For development</summary>
 
-  - **Route:** `/tasks/:id`
-  - **Method:** `GET`
-  - **Description:** Retrieves a task by its ID.
-  - **Request Parameter:**
-    - `id`: The ID of the task to retrieve.
-  - **Response Data:** The task object with the specified Id or and error message if the task was not found.
+1. Build image
 
-### 3.  Create Task
-
-  - **Route:** `/tasks`
-  - **Method:** `POST`
-  - **Description:** Creates a new task.
-  - **Request Body:**
-    Task details. For eg:
-    ```json
-    {
-      "title": "new task",
-      "desc": "description for new task",
-      "status": "not started"
-    }
+    ```bash
+    docker build -t <repo/image_name>:<tag> -f=./Dockerfile.dev .
     ```
-  - **Response Data:** A message indicating the task was created, including the task's detail.
 
-### 4. Update Task
+1. Create and run container with live volumes for development
 
-  - **Route:** `/tasks/:id`
-  - **Method:** `PATCH`
-  - **Description:** Updates an existing task by its ID.
-  - **Request Parameter:**
-    - `id`: The ID of the task to update.
-  - **Request Body:** The new details of the task to update
-  - **Response Data:** A message indicating the task was updated or an error message if the task was not found.
+    ```bash
+    docker run -d -v .:/app -p 8080:3000 <repo/image_name>:<tag>
+    ```
 
-### 5. Delete Task
+</details>
+<details>
 
-  - **Route:** `/tasks/:id`
-  - **Method:** `DELETE`
-  - **Description:** Deletes a task by its ID.
-  - **Request Parameter:**
-    - `id`: The ID of the task to delete.
-  - **Response Data:** A message indicating the task was deleted, or an error message if the task was not found.
+<summary>For deployment</summary>
+
+1. Build image
+
+    ```bash
+   docker build  -t <repo/image_name>:<tag> -f Dockerfile .
+    ```
+
+1. Create and run container for deployment
+
+    ```bash
+   docker run -d -p 8081:3000 <repo/image_name>:<tag>
+    ```
+
+</details>
+
+### Available Routes
+
+#### Task Routes
+
+##### 1. Get All Tasks
+
+- **Route:** `/tasks`
+- **Method:** `GET`
+- **Description:** Retrieves all tasks.
+- **Response Data:** A list of all tasks or a message if there is no task
+
+##### 2. Get Task by ID
+
+- **Route:** `/tasks/:id`
+- **Method:** `GET`
+- **Description:** Retrieves a task by its ID.
+- **Request Parameter:**
+  - `id`: The ID of the task to retrieve.
+- **Response Data:** The task object with the specified Id or and error message if the task was not found.
+
+##### 3. Create Task
+
+- **Route:** `/tasks`
+- **Method:** `POST`
+- **Description:** Creates a new task.
+- **Request Body:**
+  Task details. For eg:
+  ```json
+  {
+    "title": "new task",
+    "desc": "description for new task",
+    "status": "not started"
+  }
+  ```
+- **Response Data:** A message indicating the task was created, including the task's detail.
+
+##### 4. Update Task
+
+- **Route:** `/tasks/:id`
+- **Method:** `PATCH`
+- **Description:** Updates an existing task by its ID.
+- **Request Parameter:**
+  - `id`: The ID of the task to update.
+- **Request Body:** The new details of the task to update
+- **Response Data:** A message indicating the task was updated or an error message if the task was not found.
+
+##### 5. Delete Task
+
+- **Route:** `/tasks/:id`
+- **Method:** `DELETE`
+- **Description:** Deletes a task by its ID.
+- **Request Parameter:**
+  - `id`: The ID of the task to delete.
+- **Response Data:** A message indicating the task was deleted, or an error message if the task was not found.
+
+#### User Routes
+
+##### 1. Get User Info
+
+- **Route:** `/users/`
+- **Method:** `GET`
+- **Description:** Retrieves user details
+- **Query Parameter:**
+  - `id`: The ID of the user to retrieve.
+- **Response Data:** The user object with the specified Id or and error message if the user was not found.
+
+##### 2. Create User
+
+- **Route:** `/users/`
+- **Method:** `POST`
+- **Description:** Creates a new user.
+- **Request Body:**
+  User details. For eg:
+  ```json
+  {
+    "name": "bob",
+    "email": "bob@email.com",
+    "password": "superSecretPassword"
+  }
+  ```
+- **Response Data:** A message indicating the user was created, including the users detail.
+
+##### 4. Update User
+
+- **Route:** `/Users/`
+- **Method:** `PATCH`
+- **Description:** Updates an existing user
+- **Query Parameter:**
+  - `id`: The ID of the user to update.
+- **Request Body:** The new details of the user to update
+- **Response Data:** A message indicating the user was updated or an error message if the user was not found.
+
+##### 5. Delete User
+
+- **Route:** `/users/`
+- **Method:** `DELETE`
+- **Description:** Deletes a user
+- **Query Parameter:**
+  - `id`: The ID of the user to delete.
+- **Response Data:** A message indicating the user was deleted, or an error message if the task was not found.
+
+#### Auth Routes
+
+##### 1. Login
+
+- **Route:** `/auth/login`
+- **Method:** `POST`
+- **Description:** logs in user
+- **Request Body:**
+  User details. For eg:
+  ```json
+  {
+    "email": "bob@email.com",
+    "password": "superSecretPassword"
+  }
+  ```
+- **Response Data:** A message indicating the user was created, or an error message if user can't be created.
+
+###### 2. Refresh token
+
+- **Route:** `/auth/refresh/`
+- **Method:** `GET`
+- **Description:** Generate new tokens
 
 ## Example Usage
 
