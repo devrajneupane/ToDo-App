@@ -26,7 +26,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy .env, package.json and package-lock.json
-COPY --from=build /app/.env /app/package*.json ./
+COPY --from=build /app/.env.example /app/package*.json ./
 
 # Copy built files and necessary dependencies from the build stage
 COPY --from=build /app/data  ./data
